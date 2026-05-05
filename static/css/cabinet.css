@@ -1,0 +1,37 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto','Arial',sans-serif;background:#f0f2f5}
+.cabinet-wrapper{display:flex;min-height:100vh}
+.sidebar{width:280px;background:#0d2e8a;color:#fff;display:flex;flex-direction:column;position:fixed;height:100vh;overflow-y:auto}
+.sidebar-header{padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-header .logo-link{text-decoration:none}
+.sidebar-header .logo{font-size:24px;font-weight:bold;display:flex;align-items:center;gap:10px;color:#fff}
+.sidebar-header .logo:hover{opacity:0.9}
+.user-info{padding:20px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.avatar{font-size:64px;margin-bottom:10px}
+.user-name{font-size:18px;font-weight:500;margin-bottom:5px}
+.user-email{font-size:12px;opacity:0.7}
+.sidebar-nav{flex:1;padding:20px 0}
+.nav-section{margin-bottom:20px}
+.nav-section-title{padding:10px 20px;font-size:12px;text-transform:uppercase;opacity:0.6;display:flex;align-items:center;gap:8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 20px 10px 35px;color:#fff;text-decoration:none;transition:background 0.2s;font-size:14px}
+.nav-item:hover{background:rgba(255,255,255,0.1);text-decoration:none}
+.nav-item.active{background:#164ACF;border-left:3px solid #FD3223}
+.sidebar-footer{padding:20px;border-top:1px solid rgba(255,255,255,0.1)}
+.logout-btn{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;padding:10px;border-radius:8px;transition:background 0.2s}
+.logout-btn:hover{background:#FD3223;text-decoration:none}
+.cabinet-main{flex:1;margin-left:280px;padding:20px}
+.cabinet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #e0e0e0}
+.page-title h1{font-size:24px;color:#333}
+.header-time{color:#666;font-size:14px}
+.cabinet-content{background:#fff;border-radius:16px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.profile-card{display:flex;gap:30px;padding-bottom:30px;border-bottom:1px solid #eee;margin-bottom:30px}
+.profile-avatar{font-size:100px;color:#164ACF}
+.profile-info{flex:1}
+.info-row{margin-bottom:15px;display:flex}
+.info-label{width:140px;font-weight:600;color:#666}
+.info-value{color:#333}
+.status-active{color:#4CAF50;font-weight:500}
+.placeholder-message{text-align:center;padding:40px;color:#999}
+.placeholder-message i{font-size:48px;margin-bottom:15px;display:block}
+.placeholder-message p{font-size:16px}
+@media (max-width:768px){.sidebar{width:250px}.cabinet-main{margin-left:250px}.profile-card{flex-direction:column;text-align:center}.info-row{flex-direction:column}.info-label{width:100%;margin-bottom:5px}}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИжГУ - Главная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">
+            <div class="layout-center">
+                <div class="site-header-inner">
+                    <div class="site-header-logo">
+                        <a href="/" class="logo-link">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Logo_istu.svg/1200px-Logo_istu.svg.png" alt="ИжГУ логотип" class="logo-img" onerror="this.src='https://via.placeholder.com/100?text=IGU'">
+                        </a>
+                    </div>
+                    <div class="site-header-title">
+                        <div class="header-sup">Федеральное государственное бюджетное образовательное учреждение высшего образования</div>
+                        <h1 class="header-main">Ижевский государственный университет</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="nav-wrapper">
+            <div class="layout-center">
+                <div class="nav-container">
+                    <nav class="site-nav">
+                        <ul class="nav-menu">
+                            <li class="nav-item"><a href="#" class="nav-link">Университет</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Образование</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Студенческая жизнь</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Международная деятельность</a></li>
+                            <li class="nav-item highlight"><a href="#" class="nav-link">Поступить в ИжГУ</a></li>
+                        </ul>
+                    </nav>
+                    <div class="user-actions">
+                        <button class="settings-btn" id="settingsBtn">
+                            <i class="fa fa-cog"></i>
+                        </button>
+                        {% if session.user_id %}
+                            <a href="/cabinet" class="lk-btn">
+                                <i class="fa fa-user-circle"></i>
+                                <span>Личный кабинет</span>
+                            </a>
+                        {% else %}
+                            <a href="/login" class="lk-btn">
+                                <i class="fa fa-user-circle"></i>
+                                <span>Личный кабинет</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="site-main">
+            <div class="layout-center">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="tabcontrol">
+                    <div class="tabcontrol-header">
+                        <div class="tab-header active" data-tab="abiturient">Абитуриенту</div>
+                        <div class="tab-header" data-tab="student">Студенту</div>
+                        <div class="tab-header" data-tab="employee">Сотруднику</div>
+                    </div>
+                    <div class="tabcontrol-content active" data-tab="abiturient">
+                        <div class="tile-grid">
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-graduation-cap"></i></div><div class="tile-text"><span class="tile-title">Приём</span><span class="tile-desc">Правила приема и зачисления</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-building"></i></div><div class="tile-text"><span class="tile-title">Среднее профессиональное образование</span><span class="tile-desc">Специальности СПО</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-globe"></i></div><div class="tile-text"><span class="tile-title">Прием иностранных граждан</span><span class="tile-desc">Правила приема иностранных граждан</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-calendar"></i></div><div class="tile-text"><span class="tile-title">День открытых дверей</span><span class="tile-desc">Узнайте об особенностях приема</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-trophy"></i></div><div class="tile-text"><span class="tile-title">Олимпиады и конкурсы</span><span class="tile-desc">Приглашаем школьников</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-book"></i></div><div class="tile-text"><span class="tile-title">Центр довузовского образования</span><span class="tile-desc">Подготовка к поступлению</span></div></a></div>
+                        </div>
+                    </div>
+                    <div class="tabcontrol-content" data-tab="student">
+                        <div class="tile-grid">
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-laptop"></i></div><div class="tile-text"><span class="tile-title">Электронная информационно-образовательная среда</span><span class="tile-desc">Электронные образовательные ресурсы</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-clock-o"></i></div><div class="tile-text"><span class="tile-title">Расписание занятий</span><span class="tile-desc">Актуальное расписание с деталями пар</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-universal-access"></i></div><div class="tile-text"><span class="tile-title">Инклюзивное образование</span><span class="tile-desc">Студентам с ОВЗ</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-globe"></i></div><div class="tile-text"><span class="tile-title">Иностранному студенту</span><span class="tile-desc">Информация об условиях обучения</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-users"></i></div><div class="tile-text"><span class="tile-title">Координационный студенческий совет</span><span class="tile-desc">Объединение инициативных студентов</span></div></a></div>
+                            <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-user-circle"></i></div><div class="tile-text"><span class="tile-title">Личный кабинет студента</span><span class="tile-desc">Вход в электронную информационную систему</span></div></a></div>
+                        </div>
+                    </div>
+                    <div class="tabcontrol-content" data-tab="employee">
+                        <div class="placeholder-block"><div class="placeholder-icon">👨‍💼</div><h3>Раздел для сотрудников</h3><p>Информация появится позже</p></div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <div class="section-header"><span class="section-title">Жизнь университета</span></div>
+                    <div class="tile-grid">
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-flask"></i></div><div class="tile-text"><span class="tile-title">Совет молодых ученых</span><span class="tile-desc">Содействие научной активности молодых ученых</span></div></a></div>
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-trophy"></i></div><div class="tile-text"><span class="tile-title">Конкурсы и гранты</span><span class="tile-desc">Гранты РНФ и других организаций</span></div></a></div>
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-lightbulb-o"></i></div><div class="tile-text"><span class="tile-title">Инновационная площадка</span><span class="tile-desc">Реализация инновационных проектов</span></div></a></div>
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-users"></i></div><div class="tile-text"><span class="tile-title">КСС</span><span class="tile-desc">Координационный студенческий совет</span></div></a></div>
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-handshake-o"></i></div><div class="tile-text"><span class="tile-title">Студком</span><span class="tile-desc">Главное студенческое объединение</span></div></a></div>
+                        <div class="tile-card"><a href="#" class="tile-link"><div class="tile-icon"><i class="fa fa-heart"></i></div><div class="tile-text"><span class="tile-title">Волонтеры</span><span class="tile-desc">Социальное, событийное, экологическое волонтерство</span></div></a></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="layout-center">
+                <div class="footer-columns">
+                    <div class="footer-col">
+                        <div class="footer-copyright">© ФГБОУ ВО «Ижевский государственный университет»</div>
+                        <div class="footer-contacts">
+                            <p>426069, Удмуртская Республика, г. Ижевск, ул. Студенческая, 7</p>
+                            <p>Тел.: <a href="tel:+73412776055">(3412) 77-60-55</a></p>
+                            <p>Email: <a href="mailto:info@istu.ru">info@istu.ru</a></p>
+                        </div>
+                    </div>
+                    <div class="footer-col">
+                        <div class="footer-social">
+                            <a href="#" class="social-link">ВКонтакте</a>
+                            <a href="#" class="social-link">Telegram</a>
+                            <a href="#" class="social-link">Одноклассники</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.querySelectorAll('.tab-header').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab-header').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tabcontrol-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelector(`.tabcontrol-content[data-tab="${tab.dataset.tab}"]`).classList.add('active');
+            });
+        });
+        document.getElementById('settingsBtn')?.addEventListener('click', () => { console.log('Шестерёнка нажата'); });
+    </script>
+</body>
+</html>

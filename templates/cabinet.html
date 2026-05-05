@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/cabinet.css">
+</head>
+<body>
+    <div class="cabinet-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="logo-link">
+                    <div class="logo"><i class="fa fa-university"></i> <span>ИжГУ</span></div>
+                </a>
+            </div>
+            <div class="user-info">
+                <div class="avatar"><i class="fa fa-user-circle"></i></div>
+                <div class="user-name">{{ user.fullname }}</div>
+                <div class="user-email">{{ user.email }}</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title"><i class="fa fa-id-card"></i> Профиль</div>
+                    <a href="#" class="nav-item active"><i class="fa fa-user"></i> Личные сведения</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title"><i class="fa fa-dashboard"></i> Главное</div>
+                    <a href="#" class="nav-item"><i class="fa fa-home"></i> Рабочий стол</a>
+                    <a href="#" class="nav-item"><i class="fa fa-comments"></i> Чат</a>
+                    <a href="#" class="nav-item"><i class="fa fa-graduation-cap"></i> Зачетная книжка</a>
+                    <a href="#" class="nav-item"><i class="fa fa-calendar"></i> Расписание</a>
+                    <a href="#" class="nav-item"><i class="fa fa-users"></i> Преподаватели</a>
+                    <a href="#" class="nav-item"><i class="fa fa-file-text"></i> Приказы</a>
+                    <a href="#" class="nav-item"><i class="fa fa-folder-open"></i> Бланки заявлений</a>
+                    <a href="#" class="nav-item"><i class="fa fa-cubes"></i> Портфолио</a>
+                    <a href="#" class="nav-item"><i class="fa fa-check-square-o"></i> Академическая аттестация</a>
+                    <a href="#" class="nav-item"><i class="fa fa-cog"></i> Услуги</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title"><i class="fa fa-money"></i> Финансы</div>
+                    <a href="#" class="nav-item"><i class="fa fa-file-pdf-o"></i> Договор</a>
+                    <a href="#" class="nav-item"><i class="fa fa-receipt"></i> Чеки</a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title"><i class="fa fa-question-circle"></i> Поддержка</div>
+                    <a href="#" class="nav-item"><i class="fa fa-life-ring"></i> Часто задаваемые вопросы</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i> Выйти</a>
+            </div>
+        </aside>
+
+        <main class="cabinet-main">
+            <div class="cabinet-header">
+                <div class="page-title"><h1>Личные сведения</h1></div>
+                <div class="header-time"><span id="current-time"></span></div>
+            </div>
+            <div class="cabinet-content">
+                <div class="profile-card">
+                    <div class="profile-avatar"><i class="fa fa-user-circle"></i></div>
+                    <div class="profile-info">
+                        <div class="info-row"><span class="info-label">ФИО:</span><span class="info-value">{{ user.fullname }}</span></div>
+                        <div class="info-row"><span class="info-label">Email:</span><span class="info-value">{{ user.email }}</span></div>
+                        <div class="info-row"><span class="info-label">Дата регистрации:</span><span class="info-value">{{ user.created_at.strftime('%d.%m.%Y') }}</span></div>
+                        <div class="info-row"><span class="info-label">Статус:</span><span class="info-value status-active">Активен</span></div>
+                    </div>
+                </div>
+                <div class="placeholder-message"><i class="fa fa-info-circle"></i><p>Остальные разделы находятся в разработке</p></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        function updateTime(){document.getElementById('current-time').innerHTML=new Date().toLocaleString('ru-RU')}
+        updateTime();setInterval(updateTime,1000);
+    </script>
+</body>
+</html>
