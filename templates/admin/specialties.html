@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Специальности - Админ-панель</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-page">
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="admin-logo"><i class="fa fa-shield"></i> Admin Panel</div>
+            <nav class="admin-nav">
+                <a href="/admin"><i class="fa fa-dashboard"></i> Главная</a>
+                <a href="/admin/faculties"><i class="fa fa-university"></i> Факультеты</a>
+                <a href="/admin/specialties" class="active"><i class="fa fa-graduation-cap"></i> Специальности</a>
+                <a href="/admin/users"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/"><i class="fa fa-home"></i> На сайт</a>
+            </nav>
+        </aside>
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>Управление специальностями</h1>
+                <div class="admin-user"><i class="fa fa-user-circle"></i> {{ session.user_name }} <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i></a></div>
+            </div>
+
+            <div class="admin-card">
+                <h3>Добавить специальность</h3>
+                <form method="POST" action="/admin/specialties/add" class="admin-form">
+                    <input type="text" name="code" placeholder="Код (09.03.01)" required>
+                    <input type="text" name="name" placeholder="Название" required>
+                    <select name="faculty_id" required>
+                        <option value="">Выберите факультет</option>
+                        {% for f in faculties %}
+                        <option value="{{ f.id }}">{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="level" required>
+                        <option value="spo">СПО</option>
+                        <option value="bachelor">Бакалавриат</option>
+                        <option value="master">Магистратура</option>
+                        <option value="postgraduate">Аспирантура</option>
+                    </select>
+                    <input type="text" name="duration" placeholder="Срок обучения" value="4 года">
+                    <input type="text" name="qualification" placeholder="Квалификация" value="Бакалавр">
+                    <input type="number" name="budget_places" placeholder="Бюджетных мест" value="0">
+                    <input type="number" name="tuition_fee" placeholder="Стоимость обучения" value="0">
+                    <button type="submit"><i class="fa fa-plus"></i> Добавить</button>
+                </form>
+            </div>
+
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Код</th><th>Название</th><th>Факультет</th><th>Уровень</th><th>Срок</th><th>Бюджет</th><th>Действия</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for s in specialties %}
+                        <tr>
+                            <td>{{ s.id }}</td>
+                            <td>{{ s.code }}</td>
+                            <td>{{ s.name[:40] }}{% if s.name|length > 40 %}...{% endif %}</td>
+                            <td>{{ s.faculty.name if s.faculty else '-' }}</td>
+                            <td>{{ s.level }}</td>
+                            <td>{{ s.duration }}</td>
+                            <td>{{ s.budget_places }}</td>
+                            <td>
+                                <form method="POST" action="/admin/specialties/edit/{{ s.id }}" style="display:inline-block">
+                                    <input type="hidden" name="code" value="{{ s.code }}">
+                                    <input type="hidden" name="name" value="{{ s.name }}">
+                                    <input type="hidden" name="faculty_id" value="{{ s.faculty_id }}">
+                                    <input type="hidden" name="level" value="{{ s.level }}">
+                                    <input type="hidden" name="duration" value="{{ s.duration }}">
+                                    <input type="hidden" name="qualification" value="{{ s.qualification }}">
+                                    <input type="hidden" name="budget_places" value="{{ s.budget_places }}">
+                                    <input type="hidden" name="tuition_fee" value="{{ s.tuition_fee }}">
+                                    <button type="submit" class="btn-edit" onclick="return confirm('Сохранить изменения?')"><i class="fa fa-save"></i></button>
+                                </form>
+                                <a href="/admin/specialties/delete/{{ s.id }}" class="btn-danger" onclick="return confirm('Удалить?')"><i class="fa fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

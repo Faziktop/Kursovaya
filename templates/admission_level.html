@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .level-hero {
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            padding: 50px 0;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 40px;
+        }
+        .level-hero h1 { font-size: 32px; margin-bottom: 10px; }
+        .level-hero p { font-size: 16px; opacity: 0.9; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; color: #164ACF; text-decoration: none; font-weight: 500; }
+        .back-link:hover { color: #FD3223; }
+
+        /* Приёмная кампания */
+        .campaign-info {
+            background: linear-gradient(135deg, #fff8f0 0%, #fff0e0 100%);
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 40px;
+            border-left: 5px solid #FD3223;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .campaign-dates { display: flex; flex-wrap: wrap; gap: 20px; }
+        .campaign-item { text-align: center; }
+        .campaign-item .label { font-size: 12px; color: #999; text-transform: uppercase; }
+        .campaign-item .value { font-size: 18px; font-weight: 700; color: #164ACF; }
+        .campaign-deadline { background: #FD3223; color: #fff; padding: 10px 25px; border-radius: 40px; font-weight: 600; }
+
+        /* Список специальностей */
+        .programs-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 50px; }
+        .program-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+        .program-card:hover { transform: translateX(5px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
+        .program-header {
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            padding: 20px 25px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .program-code { font-size: 14px; opacity: 0.9; font-family: monospace; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; }
+        .program-name { font-size: 20px; font-weight: 700; }
+        .program-body { padding: 25px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; }
+        .program-info { display: flex; flex-wrap: wrap; gap: 15px; flex: 1; }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 10px 18px;
+            border-radius: 50px;
+            transition: all 0.2s;
+        }
+        .info-item i { color: #164ACF; width: 20px; font-size: 16px; }
+        .info-item span { color: #333; font-size: 14px; }
+        .info-item:hover { background: #eef3ff; transform: translateY(-2px); }
+        .program-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+        .program-detail-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #164ACF;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 20px;
+            border: 2px solid #164ACF;
+            border-radius: 40px;
+            transition: all 0.3s;
+        }
+        .program-detail-link:hover { background: #164ACF; color: #fff; }
+        .btn-apply {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 25px;
+            background: #FD3223;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn-apply:hover { background: #c40e00; }
+
+        /* Админ-кнопки */
+        .admin-actions {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #fff;
+            border: 2px solid #164ACF;
+            color: #164ACF;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .admin-btn:hover { background: #164ACF; color: #fff; }
+        .admin-btn-danger { border-color: #f44336; color: #f44336; }
+        .admin-btn-danger:hover { background: #f44336; color: #fff; }
+
+        @media (max-width: 768px) {
+            .program-header { flex-direction: column; text-align: center; }
+            .program-body { flex-direction: column; }
+            .program-info { justify-content: center; }
+            .level-hero h1 { font-size: 24px; }
+            .campaign-info { flex-direction: column; gap: 15px; text-align: center; }
+            .campaign-dates { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">...</header>
+        <div class="nav-wrapper">...</div>
+        <main class="site-main">
+            <div class="level-hero">
+                <div class="layout-center">
+                    <h1>{{ title }}</h1>
+                    <p>{{ description }}</p>
+                </div>
+            </div>
+            <div class="layout-center">
+                <a href="/admission" class="back-link"><i class="fa fa-arrow-left"></i> Назад к выбору уровня образования</a>
+
+                <!-- Приёмная кампания -->
+                <div class="campaign-info">
+                    <div class="campaign-dates">
+                        <div class="campaign-item"><div class="label">НАЧАЛО ПРИЁМА</div><div class="value">20 июня 2026</div></div>
+                        <div class="campaign-item"><div class="label">ОКОНЧАНИЕ ПРИЁМА</div><div class="value">25 августа 2026</div></div>
+                        <div class="campaign-item"><div class="label">ДОПОЛНИТЕЛЬНЫЙ НАБОР</div><div class="value">до 20 сентября 2026</div></div>
+                    </div>
+                    <div class="campaign-deadline"><i class="fa fa-clock-o"></i> Осталось 107 дней</div>
+                </div>
+
+                <!-- Админ-кнопки (видны только админу) -->
+                {% if session.user_role == 'admin' %}
+                <div class="admin-actions">
+                    <a href="/admin/specialties" class="admin-btn"><i class="fa fa-plus"></i> Добавить специальность</a>
+                    <a href="/admin/faculties" class="admin-btn"><i class="fa fa-edit"></i> Управление факультетами</a>
+                </div>
+                {% endif %}
+
+                <!-- Список специальностей -->
+                <div class="programs-list">
+                    {% for spec in specialties %}
+                    <div class="program-card">
+                        <div class="program-header">
+                            <div class="program-code">{{ spec.code }}</div>
+                            <div class="program-name">{{ spec.name }}</div>
+                            {% if spec.faculty %}
+                            <div class="program-code"><i class="fa fa-university"></i> {{ spec.faculty.name }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="program-body">
+                            <div class="program-info">
+                                <div class="info-item"><i class="fa fa-clock-o"></i> <span>{{ spec.duration }}</span></div>
+                                <div class="info-item"><i class="fa fa-graduation-cap"></i> <span>{{ spec.qualification }}</span></div>
+                                <div class="info-item"><i class="fa fa-building"></i> <span>{{ spec.form_of_education }}</span></div>
+                                <div class="info-item"><i class="fa fa-map-marker"></i> <span>{{ spec.location }}</span></div>
+                                <div class="info-item"><i class="fa fa-users"></i> <span>Бюджетных мест: {{ spec.budget_places }}</span></div>
+                                <div class="info-item"><i class="fa fa-rub"></i> <span>{{ "{:,.0f}".format(spec.tuition_fee).replace(',', ' ') }} руб/год</span></div>
+                            </div>
+                            <div class="program-actions">
+                                <a href="#" class="program-detail-link"><i class="fa fa-info-circle"></i> Подробнее</a>
+                                <a href="#" class="btn-apply"><i class="fa fa-file-text-o"></i> Подать документы →</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="placeholder-block" style="text-align:center; padding:60px;">
+                        <i class="fa fa-info-circle" style="font-size:48px; color:#999;"></i>
+                        <h3>Нет доступных специальностей</h3>
+                        <p>Информация появится позже</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+        <footer class="site-footer">...</footer>
+    </div>
+    <script>document.getElementById('settingsBtn')?.addEventListener('click', () => { console.log('Шестерёнка нажата'); });</script>
+</body>
+</html>

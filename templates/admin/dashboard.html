@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-page">
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="admin-logo"><i class="fa fa-shield"></i> Admin Panel</div>
+            <nav class="admin-nav">
+                <a href="/admin" class="active"><i class="fa fa-dashboard"></i> Главная</a>
+                <a href="/admin/faculties"><i class="fa fa-university"></i> Факультеты</a>
+                <a href="/admin/specialties"><i class="fa fa-graduation-cap"></i> Специальности</a>
+                <a href="/admin/users"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/"><i class="fa fa-home"></i> На сайт</a>
+            </nav>
+        </aside>
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>Панель управления</h1>
+                <div class="admin-user">
+                    <i class="fa fa-user-circle"></i> {{ session.user_name }}
+                    <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i></a>
+                </div>
+            </div>
+            <div class="admin-stats">
+                <div class="stat-card"><i class="fa fa-users"></i><div class="stat-value">{{ stats.users_count }}</div><div class="stat-label">Пользователей</div></div>
+                <div class="stat-card"><i class="fa fa-graduation-cap"></i><div class="stat-value">{{ stats.specialties_count }}</div><div class="stat-label">Специальностей</div></div>
+                <div class="stat-card"><i class="fa fa-university"></i><div class="stat-value">{{ stats.faculties_count }}</div><div class="stat-label">Факультетов</div></div>
+                <div class="stat-card"><i class="fa fa-shield"></i><div class="stat-value">{{ stats.admins_count }}</div><div class="stat-label">Администраторов</div></div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
