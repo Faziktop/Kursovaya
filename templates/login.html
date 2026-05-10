@@ -5,82 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход - ИжГУ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/static/css/auth.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Roboto',Arial,sans-serif;background:linear-gradient(135deg,#164ACF,#0d2e8a);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .login-container{max-width:450px;width:100%;background:#fff;border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,0.15);overflow:hidden}
+        .login-header{background:linear-gradient(135deg,#164ACF,#0d2e8a);padding:30px 20px;text-align:center;color:#fff}
+        .login-logo{width:70px;height:70px;margin:0 auto 15px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
+        .login-logo i{font-size:35px;color:#164ACF}
+        .login-header h2{margin:0 0 5px;font-size:24px}
+        .login-header p{margin:0;opacity:0.8}
+        .login-form{padding:30px}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:#333}
+        .form-group label i{color:#164ACF;width:20px}
+        .form-group input{width:100%;padding:12px 15px;border:2px solid #e0e0e0;border-radius:12px;font-size:15px;box-sizing:border-box;font-family:inherit}
+        .form-group input:focus{border-color:#164ACF;outline:none;box-shadow:0 0 0 3px rgba(22,74,207,0.1)}
+        .form-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;font-size:14px}
+        .form-actions label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:normal}
+        .form-actions a{color:#164ACF;text-decoration:none}
+        .form-actions a:hover{text-decoration:underline}
+        .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#164ACF,#0d2e8a);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.3s ease}
+        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(22,74,207,0.3)}
+        .login-footer{text-align:center;margin-top:25px;padding-top:20px;border-top:1px solid #eee}
+        .login-footer a{color:#164ACF;text-decoration:none;font-weight:500}
+        .login-footer a:hover{text-decoration:underline}
+        .support-link{text-align:center;margin-top:15px;font-size:13px;color:#999}
+        .support-link a{color:#999;text-decoration:none}
+        .support-link a:hover{color:#164ACF}
+        .alert{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000;padding:15px 25px;border-radius:10px;font-size:14px}
+        .alert-success{background:#4CAF50;color:#fff}
+        .alert-error{background:#f44336;color:#fff}
+        .alert-info{background:#2196F3;color:#fff}
+    </style>
 </head>
-<body class="auth-page">
-    <div class="auth-wrapper">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="auth-logo">
-                    <i class="fa fa-university"></i>
-                </div>
-                <h2 class="auth-title">Личный кабинет</h2>
-                <p class="auth-subtitle">Вход в систему</p>
-            </div>
-            <form class="auth-form" method="POST" action="/login">
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fa fa-envelope"></i>
-                        E-mail
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="email" name="email" class="form-input" placeholder="example@istu.ru" required autofocus>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fa fa-lock"></i>
-                        Пароль
-                    </label>
-                    <div class="input-wrapper">
-                        <input type="password" name="password" id="password" class="form-input" placeholder="••••••••" required>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <i class="fa fa-eye-slash" id="toggleIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="remember">
-                        <span>Запомнить меня</span>
-                    </label>
-                    <a href="#" class="forgot-link">Забыли пароль?</a>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="fa fa-sign-in"></i>
-                    Войти
-                </button>
-
-                <div class="auth-footer">
-                    <span class="text-muted">Впервые здесь?</span>
-                    <a href="/register" class="register-link">Зарегистрироваться</a>
-                </div>
-
-                <div class="support-link">
-                    <i class="fa fa-headphones"></i>
-                    <a href="#">Написать в техподдержку</a>
-                </div>
-            </form>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo"><i class="fa fa-university"></i></div>
+            <h2>Личный кабинет</h2>
+            <p>Вход в систему</p>
         </div>
+        <form class="login-form" method="POST" action="/login">
+            <div class="form-group">
+                <label><i class="fa fa-envelope"></i> E-mail</label>
+                <input type="email" name="email" placeholder="example@istu.ru" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fa fa-lock"></i> Пароль</label>
+                <input type="password" name="password" id="password" placeholder="••••••••" required>
+            </div>
+            <div class="form-actions">
+                <label><input type="checkbox" name="remember"> Запомнить меня</label>
+                <a href="#">Забыли пароль?</a>
+            </div>
+            <button type="submit" class="btn-submit"><i class="fa fa-sign-in"></i> Войти</button>
+            <div class="login-footer">
+                <span>Впервые здесь?</span> <a href="/register">Зарегистрироваться</a>
+            </div>
+            <div class="support-link">
+                <i class="fa fa-headphones"></i> <a href="#">Написать в техподдержку</a>
+            </div>
+        </form>
     </div>
-
-    <script>
-        function togglePassword() {
-            const password = document.getElementById('password');
-            const icon = document.getElementById('toggleIcon');
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                password.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            }
-        }
-    </script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </body>
 </html>

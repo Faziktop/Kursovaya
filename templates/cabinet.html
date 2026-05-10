@@ -6,6 +6,35 @@
     <title>Личный кабинет - ИжГУ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/static/css/cabinet.css">
+    <style>
+        .user-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .user-avatar-large i {
+            font-size: 60px;
+            color: white;
+        }
+        .profile-avatar {
+            text-align: center;
+        }
+        .info-card {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 16px;
+        }
+        .info-card h3 {
+            margin-bottom: 10px;
+            color: #164ACF;
+        }
+    </style>
 </head>
 <body>
     <div class="cabinet-wrapper">
@@ -16,9 +45,16 @@
                 </a>
             </div>
             <div class="user-info">
-                <div class="avatar"><i class="fa fa-user-circle"></i></div>
+                <div class="avatar">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%); margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa fa-user" style="font-size: 40px; color: white;"></i>
+                    </div>
+                </div>
                 <div class="user-name">{{ user.fullname }}</div>
                 <div class="user-email">{{ user.email }}</div>
+                {% if user.phone %}
+                <div class="user-email"><i class="fa fa-phone"></i> {{ user.phone }}</div>
+                {% endif %}
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
@@ -60,21 +96,44 @@
             </div>
             <div class="cabinet-content">
                 <div class="profile-card">
-                    <div class="profile-avatar"><i class="fa fa-user-circle"></i></div>
+                    <div class="profile-avatar">
+                        <div class="user-avatar-large">
+                            <i class="fa fa-user"></i>
+                        </div>
+                    </div>
                     <div class="profile-info">
                         <div class="info-row"><span class="info-label">ФИО:</span><span class="info-value">{{ user.fullname }}</span></div>
                         <div class="info-row"><span class="info-label">Email:</span><span class="info-value">{{ user.email }}</span></div>
+                        {% if user.phone %}
+                        <div class="info-row"><span class="info-label">Телефон:</span><span class="info-value">{{ user.phone }}</span></div>
+                        {% endif %}
+                        {% if user.position %}
+                        <div class="info-row"><span class="info-label">Должность:</span><span class="info-value">{{ user.position }}</span></div>
+                        {% endif %}
                         <div class="info-row"><span class="info-label">Дата регистрации:</span><span class="info-value">{{ user.created_at.strftime('%d.%m.%Y') }}</span></div>
                         <div class="info-row"><span class="info-label">Статус:</span><span class="info-value status-active">Активен</span></div>
+                        {% if user.role %}
+                        <div class="info-row"><span class="info-label">Роль:</span><span class="info-value">{{ user.role }}</span></div>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="placeholder-message"><i class="fa fa-info-circle"></i><p>Остальные разделы находятся в разработке</p></div>
+                {% if user.bio %}
+                <div class="info-card">
+                    <h3><i class="fa fa-info-circle"></i> О себе</h3>
+                    <p>{{ user.bio }}</p>
+                </div>
+                {% endif %}
+                <div class="placeholder-message">
+                    <i class="fa fa-info-circle"></i>
+                    <p>Остальные разделы находятся в разработке</p>
+                </div>
             </div>
         </main>
     </div>
     <script>
-        function updateTime(){document.getElementById('current-time').innerHTML=new Date().toLocaleString('ru-RU')}
-        updateTime();setInterval(updateTime,1000);
+        function updateTime(){document.getElementById('current-time').innerHTML=new Date().toLocaleString('ru-RU');}
+        updateTime();
+        setInterval(updateTime,1000);
     </script>
 </body>
 </html>

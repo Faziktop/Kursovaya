@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ specialty.name }} - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .specialty-hero {
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            padding: 40px 0;
+            color: #fff;
+        }
+        .specialty-hero h1 { font-size: 28px; margin-bottom: 10px; }
+        .specialty-hero .code { font-size: 16px; opacity: 0.8; font-family: monospace; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; margin: 20px 0; color: #164ACF; text-decoration: none; font-weight: 500; }
+        .back-link:hover { color: #FD3223; }
+        .specialty-container { display: flex; gap: 30px; margin-bottom: 40px; }
+        .specialty-main { flex: 2; }
+        .specialty-sidebar { flex: 1; }
+        .info-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        .info-card h3 { font-size: 18px; font-weight: 700; color: #164ACF; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #FD3223; display: inline-block; }
+        .info-card h4 { font-size: 16px; font-weight: 600; color: #333; margin: 15px 0 10px; }
+        .info-row { display: flex; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .info-label { width: 140px; font-weight: 600; color: #666; }
+        .info-value { flex: 1; color: #333; }
+        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .price-item { background: #f8f9fa; padding: 15px; border-radius: 12px; text-align: center; }
+        .price-item .label { font-size: 12px; color: #999; text-transform: uppercase; }
+        .price-item .value { font-size: 24px; font-weight: 700; color: #164ACF; }
+        .exam-list { list-style: none; padding: 0; }
+        .exam-list li { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .exam-list li i { color: #164ACF; width: 25px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 600; }
+        .badge-active { background: #4CAF50; color: #fff; }
+        .badge-inactive { background: #999; color: #fff; }
+        .discipline-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .discipline-tag { background: #eef3ff; padding: 6px 15px; border-radius: 30px; font-size: 13px; color: #164ACF; }
+        .btn-apply-large { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: #FD3223; color: #fff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 18px; transition: background 0.3s; margin-top: 20px; }
+        .btn-apply-large:hover { background: #c40e00; }
+        .doc-list { list-style: none; padding: 0; }
+        .doc-list li { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .doc-list li a { color: #164ACF; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .doc-list li a:hover { color: #FD3223; text-decoration: underline; }
+        .head-card { text-align: center; }
+        .head-name { font-size: 18px; font-weight: 700; color: #164ACF; margin-bottom: 5px; }
+        .head-position { font-size: 14px; color: #666; margin-bottom: 15px; }
+        .head-contact { font-size: 13px; color: #999; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .head-contact i { color: #164ACF; width: 16px; }
+        @media (max-width: 900px) {
+            .specialty-container { flex-direction: column; }
+            .info-row { flex-direction: column; }
+            .info-label { width: 100%; margin-bottom: 5px; }
+            .price-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">
+            <div class="layout-center">
+                <div class="site-header-inner">
+                    <div class="site-header-logo">
+                        <a href="/" class="logo-link">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Logo_istu.svg/1200px-Logo_istu.svg.png" alt="ИжГУ логотип" class="logo-img" onerror="this.src='https://via.placeholder.com/100?text=IGU'">
+                        </a>
+                    </div>
+                    <div class="site-header-title">
+                        <div class="header-sup">Федеральное государственное бюджетное образовательное учреждение высшего образования</div>
+                        <h1 class="header-main">Ижевский государственный университет</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="nav-wrapper">
+            <div class="layout-center">
+                <div class="nav-container">
+                    <nav class="site-nav">
+                        <ul class="nav-menu">
+                            <li class="nav-item"><a href="/" class="nav-link">Университет</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Образование</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Студенческая жизнь</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Международная деятельность</a></li>
+                            <li class="nav-item highlight"><a href="/admission" class="nav-link">Поступить в ИжГУ</a></li>
+                        </ul>
+                    </nav>
+                    <div class="user-actions">
+                        <button class="settings-btn" id="settingsBtn"><i class="fa fa-cog"></i></button>
+                        {% if session.user_id %}
+                            <a href="/cabinet" class="lk-btn"><i class="fa fa-user-circle"></i><span>Личный кабинет</span></a>
+                        {% else %}
+                            <a href="/login" class="lk-btn"><i class="fa fa-user-circle"></i><span>Личный кабинет</span></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="site-main">
+            <div class="specialty-hero">
+                <div class="layout-center">
+                    <div class="code">{{ specialty.code }}</div>
+                    <h1>{{ specialty.name }}</h1>
+                    <div class="code">{{ specialty.faculty.name }} • {{ specialty.level_rus }}</div>
+                </div>
+            </div>
+
+            <div class="layout-center">
+                <a href="{{ back_url }}" class="back-link"><i class="fa fa-arrow-left"></i> Назад к выбору направления</a>
+
+                <div class="specialty-container">
+                    <div class="specialty-main">
+                        <div class="info-card">
+                            <h3><i class="fa fa-info-circle"></i> Основная информация</h3>
+                            <div class="info-row"><div class="info-label">Факультет:</div><div class="info-value">{{ specialty.faculty.name }}</div></div>
+                            <div class="info-row"><div class="info-label">Специальность:</div><div class="info-value">{{ specialty.name }} ({{ specialty.code }})</div></div>
+                            <div class="info-row"><div class="info-label">Квалификация:</div><div class="info-value">{{ specialty.qualification }}</div></div>
+                            <div class="info-row"><div class="info-label">Срок обучения:</div><div class="info-value">{{ specialty.duration }}</div></div>
+                            <div class="info-row"><div class="info-label">Форма обучения:</div><div class="info-value">{{ specialty.form_of_education }}</div></div>
+                            <div class="info-row"><div class="info-label">Актуальность:</div><div class="info-value">{% if specialty.is_active %}<span class="badge badge-active"><i class="fa fa-check-circle"></i> Актуальна</span>{% else %}<span class="badge badge-inactive"><i class="fa fa-clock-o"></i> Набор закрыт</span>{% endif %}</div></div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-users"></i> Количество мест</h3>
+                            <div class="price-grid">
+                                <div class="price-item"><div class="label">БЮДЖЕТНЫХ МЕСТ</div><div class="value">{{ specialty.budget_places }}</div></div>
+                                <div class="price-item"><div class="label">ПЛАТНЫХ МЕСТ</div><div class="value">{{ specialty.paid_places if specialty.paid_places else 0 }}</div></div>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-pencil-square-o"></i> Вступительные испытания</h3>
+                            <ul class="exam-list">
+                                {% if entrance_exams %}
+                                    {% for exam in entrance_exams %}
+                                    <li><i class="fa fa-check-circle"></i> <strong>{{ exam.name }}</strong> <span>({{ exam.min_score }}+ баллов)</span></li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><i class="fa fa-info-circle"></i> Информация о вступительных испытаниях уточняется</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-rub"></i> Стоимость обучения</h3>
+                            <div class="price-item" style="text-align: left;"><div class="label">СТОИМОСТЬ В ГОД</div><div class="value">{{ "{:,.0f}".format(specialty.tuition_fee).replace(',', ' ') }} ₽</div></div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-book"></i> Дисциплины</h3>
+                            <div class="discipline-list">
+                                {% if disciplines %}
+                                    {% for d in disciplines %}
+                                    <span class="discipline-tag">{{ d }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <p>Информация о дисциплинах уточняется</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-trophy"></i> Получаемые компетенции</h3>
+                            <p>{{ specialty.competencies or 'Информация о компетенциях уточняется' }}</p>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-briefcase"></i> Трудоустройство</h3>
+                            <p>{{ employment.description if employment else 'Информация о трудоустройстве уточняется' }}</p>
+                            {% if employment and employment.positions %}
+                            <h4><i class="fa fa-users"></i> Возможные должности:</h4>
+                            <div class="discipline-list">
+                                {% for position in employment.positions.split(',') %}
+                                <span class="discipline-tag">{{ position.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-file-text"></i> Документы для поступления</h3>
+                            <ul class="doc-list">
+                                <li><a href="#"><i class="fa fa-file-pdf-o"></i> Правила приёма 2026</a></li>
+                                <li><a href="#"><i class="fa fa-file-pdf-o"></i> Перечень документов</a></li>
+                                <li><a href="#"><i class="fa fa-file-pdf-o"></i> Образец заявления</a></li>
+                            </ul>
+                        </div>
+
+                        <a href="#" class="btn-apply-large"><i class="fa fa-file-text-o"></i> Подать документы</a>
+                    </div>
+
+                    <div class="specialty-sidebar">
+                        <div class="info-card">
+                            <h3><i class="fa fa-clock-o"></i> Приёмная кампания</h3>
+                            <div class="info-row"><div class="info-label">Начало:</div><div class="info-value">20 июня 2026</div></div>
+                            <div class="info-row"><div class="info-label">Окончание:</div><div class="info-value">25 августа 2026</div></div>
+                            <div class="info-row"><div class="info-label">Доп. набор:</div><div class="info-value">до 20 сентября 2026</div></div>
+                        </div>
+
+                        {% if specialty.head %}
+                        <div class="info-card head-card">
+                            <h3><i class="fa fa-user-circle"></i> Руководитель программы</h3>
+                            <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fa fa-user" style="font-size: 50px; color: white;"></i>
+                            </div>
+                            <div class="head-name">{{ specialty.head.fullname }}</div>
+                            <div class="head-position">{{ specialty.head.position or 'Руководитель программы' }}</div>
+                            {% if specialty.head.bio %}
+                            <p style="font-size: 13px; color: #666; margin: 10px 0;">{{ specialty.head.bio[:100] }}{% if specialty.head.bio|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            {% if specialty.head.phone %}
+                            <div class="head-contact"><i class="fa fa-phone"></i> {{ specialty.head.phone }}</div>
+                            {% endif %}
+                            {% if specialty.head.email %}
+                            <div class="head-contact"><i class="fa fa-envelope"></i> {{ specialty.head.email }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-graduation-cap"></i> Диплом</h3>
+                            <p>Диплом государственного образца о {{ 'среднем профессиональном' if specialty.level == 'spo' else 'высшем' }} образовании</p>
+                        </div>
+
+                        <div class="info-card">
+                            <h3><i class="fa fa-question-circle"></i> Есть вопросы?</h3>
+                            <p>Приёмная комиссия ИжГУ</p>
+                            <p><i class="fa fa-phone"></i> <a href="tel:+73412776055" style="color:#164ACF">(3412) 77-60-55</a></p>
+                            <p><i class="fa fa-envelope"></i> <a href="mailto:abiturient@istu.ru" style="color:#164ACF">abiturient@istu.ru</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="layout-center">
+                <div class="footer-columns">
+                    <div class="footer-col">
+                        <div class="footer-copyright">© ФГБОУ ВО «Ижевский государственный университет»</div>
+                        <div class="footer-contacts">
+                            <p>426069, Удмуртская Республика, г. Ижевск, ул. Студенческая, 7</p>
+                            <p>Тел.: <a href="tel:+73412776055">(3412) 77-60-55</a></p>
+                            <p>Email: <a href="mailto:info@istu.ru">info@istu.ru</a></p>
+                        </div>
+                    </div>
+                    <div class="footer-col">
+                        <div class="footer-social">
+                            <a href="#" class="social-link">ВКонтакте</a>
+                            <a href="#" class="social-link">Telegram</a>
+                            <a href="#" class="social-link">Одноклассники</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>document.getElementById('settingsBtn')?.addEventListener('click', () => { console.log('Шестерёнка нажата'); });</script>
+</body>
+</html>
