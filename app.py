@@ -18,12 +18,12 @@ db = SQLAlchemy(app)
 
 # ==================== МОДЕЛИ БАЗЫ ДАННЫХ ====================
 
-# ENUM типы (в SQLite используем строки с проверкой)
 class UserRole:
     AUTHENTICATED = 'authenticated'
     APPLICANT = 'applicant'
     STUDENT = 'student'
     EMPLOYEE = 'employee'
+    TEACHER = 'teacher'
     ADMIN = 'admin'
 
 
@@ -51,26 +51,6 @@ class Faculty(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-# Специальности
-class Specialty(db.Model):
-    __tablename__ = 'specialties'
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(255), nullable=False)
-    faculty_id = db.Column(db.Integer, db.ForeignKey('faculties.id'), nullable=False)
-    level = db.Column(db.String(50))  # spo, bachelor, master, postgraduate
-    duration = db.Column(db.String(50))
-    qualification = db.Column(db.String(100))
-    form_of_education = db.Column(db.String(100), default='Очная')
-    budget_places = db.Column(db.Integer, default=0)
-    tuition_fee = db.Column(db.Float, default=0)
-    location = db.Column(db.String(255), default='г. Ижевск, ул. Студенческая, 7')
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    faculty = db.relationship('Faculty', backref='specialties')
-
-
 # Пользователи
 class User(db.Model):
     __tablename__ = 'users'
@@ -78,6 +58,10 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     fullname = db.Column(db.String(200))
+    avatar = db.Column(db.String(500), default='/static/uploads/avatars/default.png')
+    phone = db.Column(db.String(20))
+    position = db.Column(db.String(200))
+    bio = db.Column(db.Text)
     role = db.Column(db.String(50), default=UserRole.AUTHENTICATED)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
@@ -89,6 +73,54 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+# Специальности
+class Specialty(db.Model):
+    __tablename__ = 'specialties'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(20), unique=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    faculty_id = db.Column(db.Integer, db.ForeignKey('faculties.id'), nullable=False)
+    level = db.Column(db.String(50))
+    duration = db.Column(db.String(50))
+    qualification = db.Column(db.String(100))
+    form_of_education = db.Column(db.String(100), default='Очная')
+    budget_places = db.Column(db.Integer, default=0)
+    paid_places = db.Column(db.Integer, default=0)
+    tuition_fee = db.Column(db.Float, default=0)
+    location = db.Column(db.String(255), default='г. Ижевск, ул. Студенческая, 7')
+    competencies = db.Column(db.Text)
+    disciplines = db.Column(db.Text)
+    head_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    faculty = db.relationship('Faculty', backref='specialties')
+    head = db.relationship('User', backref='headed_specialties')
+
+
+# Вступительные испытания
+class EntranceExam(db.Model):
+    __tablename__ = 'entrance_exams'
+    id = db.Column(db.Integer, primary_key=True)
+    specialty_id = db.Column(db.Integer, db.ForeignKey('specialties.id'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    min_score = db.Column(db.Integer, default=30)
+    priority = db.Column(db.Integer, default=1)
+
+    specialty = db.relationship('Specialty', backref='entrance_exams')
+
+
+# Данные о трудоустройстве
+class Employment(db.Model):
+    __tablename__ = 'employments'
+    id = db.Column(db.Integer, primary_key=True)
+    specialty_id = db.Column(db.Integer, db.ForeignKey('specialties.id'), nullable=False)
+    description = db.Column(db.Text)
+    positions = db.Column(db.String(500))
+
+    specialty = db.relationship('Specialty', backref='employment')
 
 
 # Группы
@@ -143,6 +175,28 @@ def admin_required(f):
     return decorated_function
 
 
+# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+
+def get_level_rus(level):
+    levels = {
+        'spo': 'Среднее профессиональное образование',
+        'bachelor': 'Бакалавриат',
+        'master': 'Магистратура',
+        'postgraduate': 'Аспирантура'
+    }
+    return levels.get(level, level)
+
+
+def get_back_url(level):
+    urls = {
+        'spo': '/admission/spo',
+        'bachelor': '/admission/bachelor',
+        'master': '/admission/master',
+        'postgraduate': '/admission/postgraduate'
+    }
+    return urls.get(level, '/admission')
+
+
 # ==================== СОЗДАНИЕ БД И ТЕСТОВЫХ ДАННЫХ ====================
 
 with app.app_context():
@@ -169,65 +223,111 @@ with app.app_context():
          'description': 'Подготовка тренеров, преподавателей физкультуры', 'image_icon': 'fa-futbol-o'},
     ]
 
-    faculties = {}
     for f in faculties_data:
         faculty = Faculty(name=f['name'], description=f['description'], image_icon=f['image_icon'])
         db.session.add(faculty)
     db.session.commit()
 
-    # Получаем созданные факультеты
     faculties_dict = {f.name: f.id for f in Faculty.query.all()}
+
+    # Создание пользователей
+    users_data = [
+        {'email': 'admin@gmail.com', 'fullname': 'Администратор', 'role': UserRole.ADMIN, 'password': 'admin',
+         'position': 'Главный администратор', 'bio': 'Администратор системы'},
+        {'email': 'teacher_it@istu.ru', 'fullname': 'Петров Петр Петрович', 'role': UserRole.TEACHER,
+         'password': 'teacher', 'position': 'Заведующий кафедрой информационных технологий',
+         'phone': '+7 (3412) 77-60-55', 'bio': 'Доктор технических наук, профессор'},
+        {'email': 'teacher_economy@istu.ru', 'fullname': 'Сидорова Анна Ивановна', 'role': UserRole.TEACHER,
+         'password': 'teacher', 'position': 'Заведующий кафедрой экономики', 'phone': '+7 (3412) 77-60-56',
+         'bio': 'Кандидат экономических наук, доцент'},
+        {'email': 'teacher_engineering@istu.ru', 'fullname': 'Иванов Сергей Викторович', 'role': UserRole.TEACHER,
+         'password': 'teacher', 'position': 'Заведующий кафедрой машиностроения', 'phone': '+7 (3412) 77-60-57',
+         'bio': 'Доктор технических наук, профессор'},
+        {'email': 'teacher_law@istu.ru', 'fullname': 'Козлова Елена Михайловна', 'role': UserRole.TEACHER,
+         'password': 'teacher', 'position': 'Заведующий кафедрой права', 'phone': '+7 (3412) 77-60-58',
+         'bio': 'Кандидат юридических наук, доцент'},
+        {'email': 'teacher_construction@istu.ru', 'fullname': 'Михайлов Андрей Владимирович', 'role': UserRole.TEACHER,
+         'password': 'teacher', 'position': 'Заведующий кафедрой строительства', 'phone': '+7 (3412) 77-60-59',
+         'bio': 'Кандидат технических наук, доцент'},
+        {'email': 'employee_dean@istu.ru', 'fullname': 'Васильева Ольга Николаевна', 'role': UserRole.EMPLOYEE,
+         'password': 'employee', 'position': 'Декан факультета информационных технологий',
+         'phone': '+7 (3412) 77-60-60', 'bio': 'Кандидат педагогических наук'},
+        {'email': 'employee_methodist@istu.ru', 'fullname': 'Смирнова Татьяна Алексеевна', 'role': UserRole.EMPLOYEE,
+         'password': 'employee', 'position': 'Методист учебного отдела', 'phone': '+7 (3412) 77-60-61', 'bio': ''},
+        {'email': 'student@mail.ru', 'fullname': 'Закиров Ильяс Русланович', 'role': UserRole.STUDENT,
+         'password': 'student'},
+    ]
+
+    for u in users_data:
+        user = User(
+            email=u['email'],
+            fullname=u['fullname'],
+            role=u['role'],
+            avatar='/static/uploads/avatars/default.png',
+            phone=u.get('phone', ''),
+            position=u.get('position', ''),
+            bio=u.get('bio', ''),
+            is_active=True
+        )
+        user.set_password(u['password'])
+        db.session.add(user)
+    db.session.commit()
+
+    users_dict = {u.fullname: u.id for u in User.query.all()}
 
     # Создание специальностей
     specialties_data = [
-        # СПО
         {'code': '09.02.07', 'name': 'Информационные системы и программирование',
          'faculty': 'Факультет информационных технологий', 'level': 'spo', 'duration': '2 года 10 месяцев',
-         'qualification': 'Программист', 'budget_places': 50, 'tuition_fee': 120000},
+         'qualification': 'Программист', 'budget_places': 50, 'paid_places': 50, 'tuition_fee': 120000,
+         'head': 'Петров Петр Петрович'},
         {'code': '15.02.12', 'name': 'Монтаж, техническое обслуживание и ремонт промышленного оборудования',
          'faculty': 'Машиностроительный факультет', 'level': 'spo', 'duration': '3 года 10 месяцев',
-         'qualification': 'Техник-механик', 'budget_places': 40, 'tuition_fee': 110000},
+         'qualification': 'Техник-механик', 'budget_places': 40, 'paid_places': 40, 'tuition_fee': 110000,
+         'head': 'Иванов Сергей Викторович'},
         {'code': '38.02.01', 'name': 'Экономика и бухгалтерский учет', 'faculty': 'Факультет экономики и права',
          'level': 'spo', 'duration': '2 года 10 месяцев', 'qualification': 'Бухгалтер', 'budget_places': 45,
-         'tuition_fee': 100000},
-
-        # Бакалавриат
+         'paid_places': 45, 'tuition_fee': 100000, 'head': 'Сидорова Анна Ивановна'},
         {'code': '09.03.01', 'name': 'Информатика и вычислительная техника',
          'faculty': 'Факультет информационных технологий', 'level': 'bachelor', 'duration': '4 года',
-         'qualification': 'Бакалавр', 'budget_places': 60, 'tuition_fee': 150000},
+         'qualification': 'Бакалавр', 'budget_places': 60, 'paid_places': 60, 'tuition_fee': 150000,
+         'head': 'Петров Петр Петрович'},
         {'code': '15.03.05', 'name': 'Конструкторско-технологическое обеспечение машиностроительных производств',
          'faculty': 'Машиностроительный факультет', 'level': 'bachelor', 'duration': '4 года',
-         'qualification': 'Бакалавр', 'budget_places': 55, 'tuition_fee': 140000},
+         'qualification': 'Бакалавр', 'budget_places': 55, 'paid_places': 55, 'tuition_fee': 140000,
+         'head': 'Иванов Сергей Викторович'},
         {'code': '38.03.01', 'name': 'Экономика', 'faculty': 'Факультет экономики и права', 'level': 'bachelor',
-         'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 70, 'tuition_fee': 135000},
+         'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 70, 'paid_places': 70,
+         'tuition_fee': 135000, 'head': 'Сидорова Анна Ивановна'},
         {'code': '40.03.01', 'name': 'Юриспруденция', 'faculty': 'Факультет экономики и права', 'level': 'bachelor',
-         'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 65, 'tuition_fee': 145000},
+         'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 65, 'paid_places': 65,
+         'tuition_fee': 145000, 'head': 'Козлова Елена Михайловна'},
         {'code': '44.03.01', 'name': 'Педагогическое образование',
          'faculty': 'Факультет математики и естественных наук', 'level': 'bachelor', 'duration': '4 года',
-         'qualification': 'Бакалавр', 'budget_places': 50, 'tuition_fee': 125000},
+         'qualification': 'Бакалавр', 'budget_places': 50, 'paid_places': 50, 'tuition_fee': 125000, 'head': None},
         {'code': '08.03.01', 'name': 'Строительство', 'faculty': 'Факультет строительства, архитектуры и дизайна',
-         'level': 'bachelor', 'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 55,
-         'tuition_fee': 140000},
-
-        # Магистратура
+         'level': 'bachelor', 'duration': '4 года', 'qualification': 'Бакалавр', 'budget_places': 55, 'paid_places': 55,
+         'tuition_fee': 140000, 'head': 'Михайлов Андрей Владимирович'},
         {'code': '09.04.01', 'name': 'Информатика и вычислительная техника',
          'faculty': 'Факультет информационных технологий', 'level': 'master', 'duration': '2 года',
-         'qualification': 'Магистр', 'budget_places': 30, 'tuition_fee': 170000},
+         'qualification': 'Магистр', 'budget_places': 30, 'paid_places': 30, 'tuition_fee': 170000,
+         'head': 'Петров Петр Петрович'},
         {'code': '38.04.01', 'name': 'Экономика', 'faculty': 'Факультет экономики и права', 'level': 'master',
-         'duration': '2 года', 'qualification': 'Магистр', 'budget_places': 35, 'tuition_fee': 160000},
+         'duration': '2 года', 'qualification': 'Магистр', 'budget_places': 35, 'paid_places': 35,
+         'tuition_fee': 160000, 'head': 'Сидорова Анна Ивановна'},
         {'code': '15.04.05', 'name': 'Конструкторско-технологическое обеспечение машиностроительных производств',
          'faculty': 'Машиностроительный факультет', 'level': 'master', 'duration': '2 года', 'qualification': 'Магистр',
-         'budget_places': 25, 'tuition_fee': 165000},
-
-        # Аспирантура
+         'budget_places': 25, 'paid_places': 25, 'tuition_fee': 165000, 'head': 'Иванов Сергей Викторович'},
         {'code': '09.06.01', 'name': 'Информатика и вычислительная техника',
          'faculty': 'Факультет информационных технологий', 'level': 'postgraduate', 'duration': '3 года',
-         'qualification': 'Исследователь', 'budget_places': 10, 'tuition_fee': 200000},
+         'qualification': 'Исследователь', 'budget_places': 10, 'paid_places': 10, 'tuition_fee': 200000,
+         'head': 'Петров Петр Петрович'},
         {'code': '15.06.01', 'name': 'Машиностроение', 'faculty': 'Машиностроительный факультет',
          'level': 'postgraduate', 'duration': '3 года', 'qualification': 'Исследователь', 'budget_places': 10,
-         'tuition_fee': 200000},
+         'paid_places': 10, 'tuition_fee': 200000, 'head': 'Иванов Сергей Викторович'},
         {'code': '38.06.01', 'name': 'Экономика', 'faculty': 'Факультет экономики и права', 'level': 'postgraduate',
-         'duration': '3 года', 'qualification': 'Исследователь', 'budget_places': 8, 'tuition_fee': 195000},
+         'duration': '3 года', 'qualification': 'Исследователь', 'budget_places': 8, 'paid_places': 8,
+         'tuition_fee': 195000, 'head': 'Сидорова Анна Ивановна'},
     ]
 
     for s in specialties_data:
@@ -239,38 +339,110 @@ with app.app_context():
             duration=s['duration'],
             qualification=s['qualification'],
             budget_places=s['budget_places'],
-            tuition_fee=s['tuition_fee']
+            paid_places=s.get('paid_places', 0),
+            tuition_fee=s['tuition_fee'],
+            head_id=users_dict.get(s['head']) if s.get('head') else None
         )
         db.session.add(specialty)
+    db.session.commit()
 
-    # Создание тестового админа
-    admin = User.query.filter_by(email='admin@gmail.com').first()
-    if not admin:
-        admin = User(
-            email='admin@gmail.com',
-            fullname='Администратор',
-            role=UserRole.ADMIN,
-            is_active=True
-        )
-        admin.set_password('admin')
-        db.session.add(admin)
+    # Добавление вступительных испытаний, компетенций, дисциплин и трудоустройства
+    for spec in Specialty.query.all():
+        if spec.level == 'bachelor':
+            exams = [
+                {'name': 'Русский язык', 'min_score': 40},
+                {'name': 'Математика (профильная)', 'min_score': 39},
+                {'name': 'Информатика и ИКТ', 'min_score': 44}
+            ]
+            for exam_data in exams:
+                exam = EntranceExam(
+                    specialty_id=spec.id,
+                    name=exam_data['name'],
+                    min_score=exam_data['min_score']
+                )
+                db.session.add(exam)
+        elif spec.level == 'master':
+            exams = [
+                {'name': 'Специализированный экзамен', 'min_score': 50},
+                {'name': 'Собеседование', 'min_score': 60}
+            ]
+            for exam_data in exams:
+                exam = EntranceExam(
+                    specialty_id=spec.id,
+                    name=exam_data['name'],
+                    min_score=exam_data['min_score']
+                )
+                db.session.add(exam)
+        elif spec.level == 'spo':
+            exams = [
+                {'name': 'Русский язык', 'min_score': 30},
+                {'name': 'Математика', 'min_score': 30}
+            ]
+            for exam_data in exams:
+                exam = EntranceExam(
+                    specialty_id=spec.id,
+                    name=exam_data['name'],
+                    min_score=exam_data['min_score']
+                )
+                db.session.add(exam)
 
-    # Создание тестового студента
-    student = User.query.filter_by(email='student@mail.ru').first()
-    if not student:
-        student = User(
-            email='student@mail.ru',
-            fullname='Иванов Иван Иванович',
-            role=UserRole.STUDENT,
-            is_active=True
-        )
-        student.set_password('student')
-        db.session.add(student)
+        if 'Информационные' in spec.name or 'Информатика' in spec.name:
+            spec.competencies = 'Разработка программного обеспечения, администрирование баз данных, веб-разработка, машинное обучение, защита информации'
+            spec.disciplines = 'Программирование, Базы данных, Web-технологии, Операционные системы, Сети и телекоммуникации, Искусственный интеллект'
+        elif 'Экономика' in spec.name or 'Бухгалтерский' in spec.name:
+            spec.competencies = 'Финансовый анализ, бюджетирование, налоговое планирование, управленческий учет'
+            spec.disciplines = 'Макроэкономика, Микроэкономика, Бухучет, Финансы, Статистика, Налоги'
+        elif 'Юриспруденция' in spec.name or 'Право' in spec.name:
+            spec.competencies = 'Знание законодательства, составление документов, представление интересов в суде'
+            spec.disciplines = 'Гражданское право, Уголовное право, Административное право, Трудовое право'
+        elif 'Строительство' in spec.name:
+            spec.competencies = 'Проектирование зданий, строительный контроль, сметное дело'
+            spec.disciplines = 'Строительные материалы, Сопромат, Архитектура, Инженерные сети'
+        elif 'Педагогическое' in spec.name:
+            spec.competencies = 'Преподавание, воспитательная работа, разработка учебных программ'
+            spec.disciplines = 'Педагогика, Психология, Методика преподавания, Возрастная психология'
+        else:
+            spec.competencies = 'Профессиональные компетенции по направлению подготовки'
+            spec.disciplines = 'Профессиональные дисциплины по направлению подготовки'
+
+        if 'Информационные' in spec.name or 'Информатика' in spec.name:
+            employment = Employment(
+                specialty_id=spec.id,
+                description='Выпускники работают в IT-компаниях, банках, государственных структурах',
+                positions='Программист, Разработчик, Системный аналитик, DevOps-инженер, Тестировщик'
+            )
+            db.session.add(employment)
+        elif 'Экономика' in spec.name or 'Бухгалтерский' in spec.name:
+            employment = Employment(
+                specialty_id=spec.id,
+                description='Выпускники востребованы в финансовых и экономических отделах компаний',
+                positions='Экономист, Финансовый аналитик, Бухгалтер, Аудитор, Налоговый консультант'
+            )
+            db.session.add(employment)
+        elif 'Юриспруденция' in spec.name or 'Право' in spec.name:
+            employment = Employment(
+                specialty_id=spec.id,
+                description='Выпускники работают в юридических компаниях, государственных органах',
+                positions='Юрист, Адвокат, Нотариус, Юрисконсульт, Судья'
+            )
+            db.session.add(employment)
+        elif 'Строительство' in spec.name:
+            employment = Employment(
+                specialty_id=spec.id,
+                description='Выпускники работают в строительных компаниях и проектных организациях',
+                positions='Инженер-строитель, Прораб, Сметчик, Проектировщик'
+            )
+            db.session.add(employment)
+        elif 'Педагогическое' in spec.name:
+            employment = Employment(
+                specialty_id=spec.id,
+                description='Выпускники работают в образовательных учреждениях',
+                positions='Учитель, Преподаватель, Педагог-психолог, Репетитор'
+            )
+            db.session.add(employment)
 
     db.session.commit()
     print("База данных создана с тестовыми данными!")
-    print("Админ: admin@gmail.com / admin")
-    print("Студент: student@mail.ru / student")
 
 
 # ==================== МАРШРУТЫ ====================
@@ -287,9 +459,10 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         password_confirm = request.form.get('password_confirm')
+        phone = request.form.get('phone', '')
 
         if not fullname or not email or not password:
-            flash('Заполните все поля!', 'error')
+            flash('Заполните все обязательные поля!', 'error')
             return redirect(url_for('register'))
 
         if password != password_confirm:
@@ -300,7 +473,13 @@ def register():
             flash('Пользователь с таким email уже существует!', 'error')
             return redirect(url_for('register'))
 
-        user = User(fullname=fullname, email=email, role=UserRole.AUTHENTICATED)
+        user = User(
+            fullname=fullname,
+            email=email,
+            role=UserRole.AUTHENTICATED,
+            avatar='/static/uploads/avatars/default.png',
+            phone=phone
+        )
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -325,6 +504,7 @@ def login():
             session['user_name'] = user.fullname
             session['user_email'] = user.email
             session['user_role'] = user.role
+            session['user_avatar'] = user.avatar
 
             user.last_login = datetime.utcnow()
             db.session.commit()
@@ -395,6 +575,28 @@ def admission_postgraduate():
                            specialties=specialties)
 
 
+# ==================== СТРАНИЦА СПЕЦИАЛЬНОСТИ ====================
+
+@app.route('/specialty/<int:specialty_id>')
+def specialty_detail(specialty_id):
+    specialty = Specialty.query.get_or_404(specialty_id)
+    entrance_exams = EntranceExam.query.filter_by(specialty_id=specialty_id).all()
+    employment = Employment.query.filter_by(specialty_id=specialty_id).first()
+
+    disciplines = []
+    if specialty.disciplines:
+        disciplines = [d.strip() for d in specialty.disciplines.split(',')]
+
+    specialty.level_rus = get_level_rus(specialty.level)
+
+    return render_template('specialty.html',
+                           specialty=specialty,
+                           entrance_exams=entrance_exams,
+                           employment=employment,
+                           disciplines=disciplines,
+                           back_url=get_back_url(specialty.level))
+
+
 # ==================== АДМИН-ПАНЕЛЬ ====================
 
 @app.route('/admin')
@@ -453,7 +655,8 @@ def admin_delete_faculty(faculty_id):
 def admin_specialties():
     specialties = Specialty.query.all()
     faculties = Faculty.query.all()
-    return render_template('admin/specialties.html', specialties=specialties, faculties=faculties)
+    users = User.query.filter(User.role.in_([UserRole.EMPLOYEE, UserRole.TEACHER, UserRole.ADMIN])).all()
+    return render_template('admin/specialties.html', specialties=specialties, faculties=faculties, users=users)
 
 
 @app.route('/admin/specialties/add', methods=['POST'])
@@ -466,8 +669,15 @@ def admin_add_specialty():
         level=request.form.get('level'),
         duration=request.form.get('duration'),
         qualification=request.form.get('qualification'),
+        form_of_education=request.form.get('form_of_education', 'Очная'),
         budget_places=request.form.get('budget_places', 0),
-        tuition_fee=request.form.get('tuition_fee', 0)
+        paid_places=request.form.get('paid_places', 0),
+        tuition_fee=request.form.get('tuition_fee', 0),
+        location=request.form.get('location', 'г. Ижевск, ул. Студенческая, 7'),
+        competencies=request.form.get('competencies', ''),
+        disciplines=request.form.get('disciplines', ''),
+        head_id=request.form.get('head_id') if request.form.get('head_id') else None,
+        is_active=True
     )
     db.session.add(specialty)
     db.session.commit()
@@ -486,8 +696,14 @@ def admin_edit_specialty(specialty_id):
         specialty.level = request.form.get('level')
         specialty.duration = request.form.get('duration')
         specialty.qualification = request.form.get('qualification')
+        specialty.form_of_education = request.form.get('form_of_education', 'Очная')
         specialty.budget_places = request.form.get('budget_places', 0)
+        specialty.paid_places = request.form.get('paid_places', 0)
         specialty.tuition_fee = request.form.get('tuition_fee', 0)
+        specialty.location = request.form.get('location', 'г. Ижевск, ул. Студенческая, 7')
+        specialty.competencies = request.form.get('competencies', '')
+        specialty.disciplines = request.form.get('disciplines', '')
+        specialty.head_id = request.form.get('head_id') if request.form.get('head_id') else None
         db.session.commit()
         flash('Специальность обновлена', 'success')
     return redirect(url_for('admin_specialties'))
@@ -523,6 +739,38 @@ def admin_change_role(user_id):
     return redirect(url_for('admin_users'))
 
 
+@app.route('/admin/users/edit/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_edit_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        user.fullname = request.form.get('fullname')
+        user.phone = request.form.get('phone')
+        user.position = request.form.get('position')
+        user.bio = request.form.get('bio')
+        db.session.commit()
+        flash('Данные пользователя обновлены', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/get/<int:user_id>')
+@admin_required
+def admin_get_user(user_id):
+    user = User.query.get(user_id)
+    if user:
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'fullname': user.fullname,
+                'email': user.email,
+                'phone': user.phone,
+                'position': user.position,
+                'bio': user.bio,
+                'avatar': user.avatar,
+                'role': user.role
+            }
+        })
+    return jsonify({'success': False, 'error': 'Пользователь не найден'})
 # ==================== ЗАПУСК ====================
 
 if __name__ == '__main__':
