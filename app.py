@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 from functools import wraps
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here-change-in-production'
@@ -12,6 +14,12 @@ app.secret_key = 'your-secret-key-here-change-in-production'
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "database.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Настройка загрузки файлов
+UPLOAD_FOLDER = os.path.join(basedir, 'uploads', 'documents')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max
 
 db = SQLAlchemy(app)
 
@@ -73,6 +81,21 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+# Заявления на поступление
+class Application(db.Model):
+    __tablename__ = 'applications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    specialty_id = db.Column(db.Integer, db.ForeignKey('specialties.id'), nullable=False)
+    status = db.Column(db.String(50), default='pending')  # pending, approved, rejected, error
+    documents_path = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref='applications')
+    specialty = db.relationship('Specialty', backref='applications')
 
 
 # Специальности
@@ -256,6 +279,8 @@ with app.app_context():
          'password': 'employee', 'position': 'Методист учебного отдела', 'phone': '+7 (3412) 77-60-61', 'bio': ''},
         {'email': 'student@mail.ru', 'fullname': 'Закиров Ильяс Русланович', 'role': UserRole.STUDENT,
          'password': 'student'},
+        {'email': 'applicant@mail.ru', 'fullname': 'Иванов Иван Иванович', 'role': UserRole.APPLICANT,
+         'password': 'applicant'},
     ]
 
     for u in users_data:
@@ -597,6 +622,109 @@ def specialty_detail(specialty_id):
                            back_url=get_back_url(specialty.level))
 
 
+# ==================== ПОДАЧА ДОКУМЕНТОВ ====================
+
+@app.route('/apply/<int:specialty_id>', methods=['GET', 'POST'])
+@login_required
+def apply(specialty_id):
+    specialty = Specialty.query.get_or_404(specialty_id)
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+        try:
+            # Создаем папку для документов пользователя
+            user_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(user.id))
+            os.makedirs(user_folder, exist_ok=True)
+
+            # Создаем уникальную папку для заявления
+            timestamp = int(datetime.utcnow().timestamp())
+            application_folder = os.path.join(user_folder, str(timestamp))
+            os.makedirs(application_folder, exist_ok=True)
+
+            # Сохраняем файлы
+            files_saved = []
+            for field in ['passport', 'snils', 'education_doc', 'benefit_doc']:
+                if field in request.files and request.files[field].filename:
+                    file = request.files[field]
+                    filename = f"{field}_{uuid.uuid4().hex}_{file.filename}"
+                    filepath = os.path.join(application_folder, filename)
+                    file.save(filepath)
+                    files_saved.append(filename)
+
+            # Сохраняем дополнительные документы
+            if 'additional_docs' in request.files:
+                additional_files = request.files.getlist('additional_docs')
+                for file in additional_files:
+                    if file.filename:
+                        filename = f"additional_{uuid.uuid4().hex}_{file.filename}"
+                        filepath = os.path.join(application_folder, filename)
+                        file.save(filepath)
+                        files_saved.append(filename)
+
+            # Сохраняем данные формы в файл
+            form_data = {
+                'last_name': request.form.get('last_name'),
+                'first_name': request.form.get('first_name'),
+                'patronymic': request.form.get('patronymic'),
+                'birth_date': request.form.get('birth_date'),
+                'education_doc_type': request.form.get('education_doc_type'),
+                'benefit_type': request.form.get('benefit_type'),
+                'submitted_at': datetime.utcnow().isoformat()
+            }
+
+            import json
+            with open(os.path.join(application_folder, 'form_data.json'), 'w', encoding='utf-8') as f:
+                json.dump(form_data, f, ensure_ascii=False, indent=2)
+
+            # Создаем заявление
+            application = Application(
+                user_id=user.id,
+                specialty_id=specialty_id,
+                status='pending',
+                documents_path=application_folder
+            )
+            db.session.add(application)
+
+            # Меняем роль пользователя на абитуриента
+            if user.role == 'authenticated':
+                user.role = UserRole.APPLICANT
+                session['user_role'] = user.role
+
+            db.session.commit()
+
+            flash('Документы успешно поданы! Ваше заявление принято на рассмотрение.', 'success')
+            return redirect(url_for('cabinet', section='applications'))
+
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            flash(f'Ошибка при подаче документов: {str(e)}', 'error')
+            return redirect(url_for('apply', specialty_id=specialty_id))
+
+    return render_template('apply.html', specialty=specialty, user=user)
+@app.route('/api/applications')
+@login_required
+def get_applications():
+    user_id = session['user_id']
+    applications = Application.query.filter_by(user_id=user_id).all()
+
+    status_text = {
+        'pending': 'На рассмотрении',
+        'approved': 'Принято',
+        'rejected': 'Отказано',
+        'error': 'Ошибка'
+    }
+
+    return jsonify({
+        'applications': [{
+            'id': app.id,
+            'specialty_name': app.specialty.name if app.specialty else '',
+            'status': app.status,
+            'status_text': status_text.get(app.status, 'Неизвестно'),
+            'created_at': app.created_at.strftime('%d.%m.%Y %H:%M')
+        } for app in applications]
+    })
+
+
 # ==================== АДМИН-ПАНЕЛЬ ====================
 
 @app.route('/admin')
@@ -648,6 +776,45 @@ def admin_delete_faculty(faculty_id):
         db.session.commit()
         flash('Факультет удалён', 'success')
     return redirect(url_for('admin_faculties'))
+
+
+@app.route('/admin/faculties/update/<int:faculty_id>', methods=['POST'])
+@admin_required
+def admin_update_faculty(faculty_id):
+    faculty = Faculty.query.get(faculty_id)
+    if not faculty:
+        return jsonify({'success': False, 'error': 'Факультет не найден'})
+
+    data = request.get_json()
+    if data:
+        if 'name' in data:
+            faculty.name = data['name']
+        if 'description' in data:
+            faculty.description = data['description']
+        if 'image_icon' in data:
+            faculty.image_icon = data['image_icon']
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Данные обновлены'})
+
+    return jsonify({'success': False, 'error': 'Нет данных'})
+
+
+@app.route('/admin/faculties/get/<int:faculty_id>')
+@admin_required
+def admin_get_faculty_json(faculty_id):
+    faculty = Faculty.query.get(faculty_id)
+    if faculty:
+        return jsonify({
+            'success': True,
+            'faculty': {
+                'id': faculty.id,
+                'name': faculty.name,
+                'description': faculty.description or '',
+                'image_icon': faculty.image_icon or 'fa-university'
+            }
+        })
+    return jsonify({'success': False, 'error': 'Факультет не найден'})
 
 
 @app.route('/admin/specialties')
@@ -720,6 +887,80 @@ def admin_delete_specialty(specialty_id):
     return redirect(url_for('admin_specialties'))
 
 
+@app.route('/admin/specialties/update/<int:specialty_id>', methods=['POST'])
+@admin_required
+def admin_update_specialty(specialty_id):
+    specialty = Specialty.query.get(specialty_id)
+    if not specialty:
+        return jsonify({'success': False, 'error': 'Специальность не найдена'})
+
+    data = request.get_json()
+    if data:
+        if 'code' in data:
+            specialty.code = data['code']
+        if 'name' in data:
+            specialty.name = data['name']
+        if 'faculty_id' in data:
+            specialty.faculty_id = data['faculty_id']
+        if 'level' in data:
+            specialty.level = data['level']
+        if 'duration' in data:
+            specialty.duration = data['duration']
+        if 'qualification' in data:
+            specialty.qualification = data['qualification']
+        if 'form_of_education' in data:
+            specialty.form_of_education = data['form_of_education']
+        if 'budget_places' in data:
+            specialty.budget_places = data['budget_places']
+        if 'paid_places' in data:
+            specialty.paid_places = data['paid_places']
+        if 'tuition_fee' in data:
+            specialty.tuition_fee = data['tuition_fee']
+        if 'location' in data:
+            specialty.location = data['location']
+        if 'competencies' in data:
+            specialty.competencies = data['competencies']
+        if 'disciplines' in data:
+            specialty.disciplines = data['disciplines']
+        if 'head_id' in data:
+            specialty.head_id = data['head_id'] if data['head_id'] else None
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Данные обновлены'})
+
+    return jsonify({'success': False, 'error': 'Нет данных'})
+
+
+@app.route('/admin/specialties/get/<int:specialty_id>')
+@admin_required
+def admin_get_specialty_json(specialty_id):
+    specialty = Specialty.query.get(specialty_id)
+    if specialty:
+        return jsonify({
+            'success': True,
+            'specialty': {
+                'id': specialty.id,
+                'code': specialty.code,
+                'name': specialty.name,
+                'faculty_id': specialty.faculty_id,
+                'faculty_name': specialty.faculty.name if specialty.faculty else '',
+                'level': specialty.level,
+                'duration': specialty.duration,
+                'qualification': specialty.qualification,
+                'form_of_education': specialty.form_of_education,
+                'budget_places': specialty.budget_places,
+                'paid_places': specialty.paid_places,
+                'tuition_fee': specialty.tuition_fee,
+                'location': specialty.location,
+                'competencies': specialty.competencies or '',
+                'disciplines': specialty.disciplines or '',
+                'head_id': specialty.head_id,
+                'head_name': specialty.head.fullname if specialty.head else ''
+            }
+        })
+    return jsonify({'success': False, 'error': 'Специальность не найдена'})
+
+
 @app.route('/admin/users')
 @admin_required
 def admin_users():
@@ -752,25 +993,54 @@ def admin_edit_user(user_id):
         flash('Данные пользователя обновлены', 'success')
     return redirect(url_for('admin_users'))
 
+
+@app.route('/admin/users/update/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_update_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': 'Пользователь не найден'})
+
+    data = request.get_json()
+    if data:
+        if 'fullname' in data:
+            user.fullname = data['fullname']
+        if 'phone' in data:
+            user.phone = data['phone']
+        if 'position' in data:
+            user.position = data['position']
+        if 'bio' in data:
+            user.bio = data['bio']
+        if 'avatar' in data:
+            user.avatar = data['avatar']
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Данные обновлены'})
+
+    return jsonify({'success': False, 'error': 'Нет данных'})
+
+
 @app.route('/admin/users/get/<int:user_id>')
 @admin_required
-def admin_get_user(user_id):
+def admin_get_user_json(user_id):
     user = User.query.get(user_id)
     if user:
         return jsonify({
             'success': True,
             'user': {
                 'id': user.id,
-                'fullname': user.fullname,
+                'fullname': user.fullname or '',
                 'email': user.email,
-                'phone': user.phone,
-                'position': user.position,
-                'bio': user.bio,
-                'avatar': user.avatar,
+                'phone': user.phone or '',
+                'position': user.position or '',
+                'bio': user.bio or '',
+                'avatar': user.avatar or '/static/uploads/avatars/default.png',
                 'role': user.role
             }
         })
     return jsonify({'success': False, 'error': 'Пользователь не найден'})
+
+
 # ==================== ЗАПУСК ====================
 
 if __name__ == '__main__':

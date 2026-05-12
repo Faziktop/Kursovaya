@@ -43,7 +43,7 @@
         .badge-inactive { background: #999; color: #fff; }
         .discipline-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .discipline-tag { background: #eef3ff; padding: 6px 15px; border-radius: 30px; font-size: 13px; color: #164ACF; }
-        .btn-apply-large { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: #FD3223; color: #fff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 18px; transition: background 0.3s; margin-top: 20px; }
+        .btn-apply-large { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; background: #FD3223; color: #fff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 18px; transition: background 0.3s; margin-top: 20px; border: none; cursor: pointer; }
         .btn-apply-large:hover { background: #c40e00; }
         .doc-list { list-style: none; padding: 0; }
         .doc-list li { padding: 10px 0; border-bottom: 1px solid #eee; }
@@ -194,7 +194,15 @@
                             </ul>
                         </div>
 
-                        <a href="#" class="btn-apply-large"><i class="fa fa-file-text-o"></i> Подать документы</a>
+                        {% if session.user_id %}
+                            <a href="/apply/{{ specialty.id }}" class="btn-apply-large">
+                                <i class="fa fa-file-text-o"></i> Подать документы
+                            </a>
+                        {% else %}
+                            <a href="/login?next=/apply/{{ specialty.id }}" class="btn-apply-large">
+                                <i class="fa fa-file-text-o"></i> Подать документы (сначала войдите)
+                            </a>
+                        {% endif %}
                     </div>
 
                     <div class="specialty-sidebar">
@@ -263,6 +271,10 @@
             </div>
         </footer>
     </div>
-    <script>document.getElementById('settingsBtn')?.addEventListener('click', () => { console.log('Шестерёнка нажата'); });</script>
+    <script>
+        document.getElementById('settingsBtn')?.addEventListener('click', () => {
+            console.log('Шестерёнка нажата');
+        });
+    </script>
 </body>
 </html>
