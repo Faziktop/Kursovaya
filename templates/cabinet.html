@@ -41,16 +41,26 @@
         .placeholder-message{text-align:center;padding:40px;color:#999}
         .placeholder-message i{font-size:48px;margin-bottom:15px;display:block}
         .applications-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:20px;margin-top:20px}
-        .application-card{background:#f8f9fa;border-radius:12px;padding:20px;border-left:4px solid #164ACF}
+        .application-card{background:#f8f9fa;border-radius:12px;padding:20px;border-left:4px solid #164ACF;position:relative}
         .application-status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-top:10px}
         .status-pending{background:#ffc107;color:#333}
         .status-approved{background:#4CAF50;color:#fff}
         .status-rejected{background:#f44336;color:#fff}
         .status-error{background:#9c27b0;color:#fff}
+        .delete-application{position:absolute;top:15px;right:15px;background:none;border:none;color:#f44336;cursor:pointer;font-size:18px;padding:5px 10px;border-radius:5px;transition:all 0.2s}
+        .delete-application:hover{background:#f44336;color:#fff}
+        .delete-application:disabled{opacity:0.5;cursor:not-allowed}
         .content-section{display:none}
         .content-section.active{display:block}
         .btn-view-applications{background:#164ACF;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;margin-top:20px;text-decoration:none;display:inline-block}
         .btn-view-applications:hover{background:#0d2e8a}
+        .confirm-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+        .confirm-modal.active{display:flex}
+        .confirm-modal-content{background:#fff;border-radius:16px;padding:25px;max-width:400px;text-align:center}
+        .confirm-modal-buttons{display:flex;gap:15px;justify-content:center;margin-top:20px}
+        .confirm-btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer}
+        .confirm-yes{background:#f44336;color:#fff}
+        .confirm-no{background:#999;color:#fff}
         @media (max-width:768px){.sidebar{width:250px}.cabinet-main{margin-left:250px}.profile-card{flex-direction:column;text-align:center}.info-row{flex-direction:column}.info-label{width:100%;margin-bottom:5px}}
     </style>
 </head>
@@ -75,7 +85,7 @@
                 {% endif %}
                 <div class="user-email"><i class="fa fa-tag"></i> {{ user.role }}</div>
             </div>
-
+            
             {% if user.role == 'student' or user.role == 'admin' %}
             <!-- Меню для студента и админа -->
             <nav class="sidebar-nav">
@@ -183,7 +193,7 @@
                 </div>
             </nav>
             {% endif %}
-
+            
             <div class="sidebar-footer">
                 <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i> Выйти</a>
             </div>
@@ -224,7 +234,7 @@
                     </div>
                     {% endif %}
                 </div>
-
+                
                 <!-- Секция заявлений для абитуриента -->
                 <div id="applications-section" class="content-section">
                     <h3><i class="fa fa-file-text-o"></i> Мои заявления на поступление</h3>
@@ -235,7 +245,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Секция рабочих столов (заглушки) -->
                 <div id="dashboard-section" class="content-section">
                     <div class="placeholder-message">
@@ -244,7 +254,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="chat-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-comments"></i>
@@ -252,7 +262,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="teachers-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-users"></i>
@@ -260,7 +270,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="orders-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-file-text"></i>
@@ -268,7 +278,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="forms-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-folder-open"></i>
@@ -276,7 +286,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="portfolio-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-cubes"></i>
@@ -284,7 +294,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="services-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-cog"></i>
@@ -292,7 +302,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="admission-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-graduation-cap"></i>
@@ -301,7 +311,7 @@
                         <a href="/admission" class="btn-view-applications">Перейти к выбору специальности</a>
                     </div>
                 </div>
-
+                
                 <div id="contract-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-file-pdf-o"></i>
@@ -309,7 +319,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="receipts-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-receipt"></i>
@@ -317,7 +327,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="courses-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-book"></i>
@@ -325,7 +335,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="tasks-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-tasks"></i>
@@ -333,7 +343,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="progress-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-line-chart"></i>
@@ -341,7 +351,7 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
-
+                
                 <div id="faq-section" class="content-section">
                     <div class="placeholder-message">
                         <i class="fa fa-life-ring"></i>
@@ -349,28 +359,177 @@
                         <p>Раздел в разработке</p>
                     </div>
                 </div>
+
+                <div id="schedule-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-calendar"></i>
+                        <h3>Расписание</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="payment-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-credit-card"></i>
+                        <h3>Оплата обучения</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="calendar-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-calendar"></i>
+                        <h3>Календарь</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="email-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-envelope"></i>
+                        <h3>Корпоративная почта</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="employees-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-users"></i>
+                        <h3>Сотрудники</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="disciplines-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-book"></i>
+                        <h3>Мои дисциплины</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="groups-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-users"></i>
+                        <h3>Мои группы</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="teacher_schedule-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-calendar-check-o"></i>
+                        <h3>Расписание занятий</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="materials-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-upload"></i>
+                        <h3>Загрузить материалы</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="grades-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-check-square-o"></i>
+                        <h3>Выставление оценок</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="employee_orders-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-file-text-o"></i>
+                        <h3>Приказы</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="reports-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-folder-open-o"></i>
+                        <h3>Отчеты</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="statements-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-pencil-square-o"></i>
+                        <h3>Заявления</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="contract_employee-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-file-pdf-o"></i>
+                        <h3>Трудовой договор</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="salary-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-credit-card"></i>
+                        <h3>Заработная плата</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="applicant_orders-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-file-text"></i>
+                        <h3>Приказы</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
+
+                <div id="applicant_forms-section" class="content-section">
+                    <div class="placeholder-message">
+                        <i class="fa fa-folder-open"></i>
+                        <h3>Бланки заявлений</h3>
+                        <p>Раздел в разработке</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <i class="fa fa-exclamation-triangle" style="font-size: 48px; color: #f44336; margin-bottom: 15px;"></i>
+            <h3>Удалить заявление?</h3>
+            <p>Вы уверены, что хотите удалить это заявление? Это действие нельзя отменить.</p>
+            <div class="confirm-modal-buttons">
+                <button class="confirm-btn confirm-no" onclick="closeConfirmModal()">Отмена</button>
+                <button class="confirm-btn confirm-yes" id="confirmDeleteBtn">Удалить</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         function updateTime(){
             document.getElementById('current-time').innerHTML=new Date().toLocaleString('ru-RU');
         }
         updateTime();
         setInterval(updateTime,1000);
-
+        
         // Навигация по секциям
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
                 const section = this.dataset.section;
                 if (!section) return;
-
+                
                 // Обновляем активный класс в меню
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 this.classList.add('active');
-
+                
                 // Обновляем заголовок
                 const titles = {
                     'profile': 'Личные сведения',
@@ -408,21 +567,23 @@
                     'applicant_forms': 'Бланки заявлений'
                 };
                 document.getElementById('pageTitle').innerHTML = titles[section] || section;
-
+                
                 // Показываем нужную секцию
                 document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
                 const targetSection = document.getElementById(`${section}-section`);
                 if (targetSection) {
                     targetSection.classList.add('active');
                 }
-
+                
                 // Если открыли секцию заявлений - загружаем данные
                 if (section === 'applications') {
                     loadApplications();
                 }
             });
         });
-
+        
+        let pendingDeleteId = null;
+        
         // Загрузка заявлений для абитуриента
         async function loadApplications() {
             try {
@@ -436,6 +597,11 @@
                             <p><strong>Специальность:</strong> ${app.specialty_name}</p>
                             <p><strong>Дата подачи:</strong> ${app.created_at}</p>
                             <div class="application-status status-${app.status}">${app.status_text}</div>
+                            ${app.status === 'pending' ? `
+                                <button class="delete-application" onclick="showDeleteConfirm(${app.id})" title="Удалить заявление">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     `).join('');
                 } else {
@@ -446,13 +612,60 @@
                 document.getElementById('applicationsList').innerHTML = '<div class="placeholder-message"><i class="fa fa-exclamation-triangle"></i><p>Ошибка загрузки заявлений</p></div>';
             }
         }
-
+        
+        // Показать подтверждение удаления
+        function showDeleteConfirm(applicationId) {
+            pendingDeleteId = applicationId;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+        
+        function closeConfirmModal() {
+            pendingDeleteId = null;
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+        
+        // Удаление заявления
+        async function deleteApplication(applicationId) {
+            try {
+                const response = await fetch(`/api/applications/delete/${applicationId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Заявление успешно удалено');
+                    loadApplications(); // Перезагружаем список
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Не удалось удалить заявление'));
+                }
+            } catch(e) {
+                console.error('Ошибка удаления', e);
+                alert('Ошибка при удалении заявления');
+            }
+            closeConfirmModal();
+        }
+        
+        // Назначаем обработчик для кнопки подтверждения
+        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+            if (pendingDeleteId) {
+                deleteApplication(pendingDeleteId);
+            }
+        });
+        
+        // Закрытие модального окна по клику вне его
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        });
+        
         // Проверяем URL параметр section
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('section') === 'applications') {
             document.querySelector('.nav-item[data-section="applications"]').click();
         }
-
+        
         // Для абитуриента загружаем заявления сразу
         {% if user.role == 'applicant' %}
         loadApplications();

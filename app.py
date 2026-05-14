@@ -701,28 +701,7 @@ def apply(specialty_id):
             return redirect(url_for('apply', specialty_id=specialty_id))
 
     return render_template('apply.html', specialty=specialty, user=user)
-@app.route('/api/applications')
-@login_required
-def get_applications():
-    user_id = session['user_id']
-    applications = Application.query.filter_by(user_id=user_id).all()
 
-    status_text = {
-        'pending': 'На рассмотрении',
-        'approved': 'Принято',
-        'rejected': 'Отказано',
-        'error': 'Ошибка'
-    }
-
-    return jsonify({
-        'applications': [{
-            'id': app.id,
-            'specialty_name': app.specialty.name if app.specialty else '',
-            'status': app.status,
-            'status_text': status_text.get(app.status, 'Неизвестно'),
-            'created_at': app.created_at.strftime('%d.%m.%Y %H:%M')
-        } for app in applications]
-    })
 
 
 # ==================== АДМИН-ПАНЕЛЬ ====================
@@ -1041,6 +1020,158 @@ def admin_get_user_json(user_id):
     return jsonify({'success': False, 'error': 'Пользователь не найден'})
 
 
+# Добавьте эти маршруты в app.py после существующих
+
+# ==================== УПРАВЛЕНИЕ ЗАЯВЛЕНИЯМИ ====================
+
+@app.route('/api/applications')
+@login_required
+def get_applications():
+    user_id = session['user_id']
+    applications = Application.query.filter_by(user_id=user_id).all()
+
+    status_text = {
+        'pending': 'На рассмотрении',
+        'approved': 'Принято',
+        'rejected': 'Отказано',
+        'error': 'Ошибка'
+    }
+
+    return jsonify({
+        'applications': [{
+            'id': app.id,
+            'specialty_id': app.specialty_id,
+            'specialty_name': app.specialty.name if app.specialty else '',
+            'status': app.status,
+            'status_text': status_text.get(app.status, 'Неизвестно'),
+            'created_at': app.created_at.strftime('%d.%m.%Y %H:%M')
+        } for app in applications]
+    })
+
+
+@app.route('/api/applications/delete/<int:application_id>', methods=['DELETE'])
+@login_required
+def delete_application(application_id):
+    """Удаление заявления пользователем"""
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({'success': False, 'error': 'Заявление не найдено'})
+
+    # Проверяем, что заявление принадлежит текущему пользователю
+    if application.user_id != session['user_id']:
+        return jsonify({'success': False, 'error': 'Нет прав для удаления этого заявления'})
+
+    # Проверяем, что заявление можно удалить (только если оно на рассмотрении)
+    if application.status != 'pending':
+        return jsonify({'success': False, 'error': 'Нельзя удалить заявление, которое уже обработано'})
+
+    try:
+        # Удаляем папку с документами
+        if application.documents_path and os.path.exists(application.documents_path):
+            import shutil
+            shutil.rmtree(application.documents_path)
+
+        db.session.delete(application)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Заявление успешно удалено'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+# ==================== АДМИН-ПАНЕЛЬ: ЗАЯВЛЕНИЯ ====================
+
+@app.route('/admin/applications')
+@admin_required
+def admin_applications():
+    """Страница управления заявлениями в админ-панели"""
+    applications = Application.query.order_by(Application.created_at.desc()).all()
+    return render_template('admin/applications.html', applications=applications)
+
+
+@app.route('/admin/applications/update/<int:application_id>', methods=['POST'])
+@admin_required
+def admin_update_application_status(application_id):
+    """Обновление статуса заявления администратором"""
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({'success': False, 'error': 'Заявление не найдено'})
+
+    data = request.get_json()
+    if data and 'status' in data:
+        application.status = data['status']
+        application.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        # Если заявление принято, меняем роль пользователя на студента
+        if data['status'] == 'approved':
+            user = User.query.get(application.user_id)
+            if user and user.role == 'applicant':
+                user.role = UserRole.STUDENT
+                db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Статус обновлен'})
+
+    return jsonify({'success': False, 'error': 'Нет данных'})
+
+
+@app.route('/admin/applications/delete/<int:application_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_application(application_id):
+    """Удаление заявления администратором"""
+    application = Application.query.get(application_id)
+    if not application:
+        return jsonify({'success': False, 'error': 'Заявление не найдено'})
+
+    try:
+        # Удаляем папку с документами
+        if application.documents_path and os.path.exists(application.documents_path):
+            import shutil
+            shutil.rmtree(application.documents_path)
+
+        db.session.delete(application)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Заявление удалено'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@app.route('/admin/applications/view/<int:application_id>')
+@admin_required
+def admin_view_application_docs(application_id):
+    """Просмотр документов заявления администратором"""
+    application = Application.query.get_or_404(application_id)
+    user = User.query.get(application.user_id)
+
+    # Получаем список файлов в папке заявления
+    files = []
+    if application.documents_path and os.path.exists(application.documents_path):
+        for file in os.listdir(application.documents_path):
+            file_path = os.path.join(application.documents_path, file)
+            if os.path.isfile(file_path):
+                files.append({
+                    'name': file,
+                    'size': os.path.getsize(file_path),
+                    'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%d.%m.%Y %H:%M')
+                })
+
+    return render_template('admin/application_detail.html',
+                           application=application,
+                           user=user,
+                           files=files)
+
+
+@app.route('/admin/applications/download/<int:application_id>/<filename>')
+@admin_required
+def admin_download_application_file(application_id, filename):
+    """Скачивание файла заявления"""
+    application = Application.query.get_or_404(application_id)
+    file_path = os.path.join(application.documents_path, filename)
+
+    if not os.path.exists(file_path):
+        flash('Файл не найден', 'error')
+        return redirect(url_for('admin_view_application_docs', application_id=application_id))
+
+    return send_from_directory(application.documents_path, filename, as_attachment=True)
 # ==================== ЗАПУСК ====================
 
 if __name__ == '__main__':
