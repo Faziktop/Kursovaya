@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поступление - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .admission-hero {
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            padding: 60px 0;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 40px;
+        }
+        .admission-hero h1 { font-size: 36px; margin-bottom: 15px; }
+        .admission-hero p { font-size: 18px; opacity: 0.9; }
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        .level-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .level-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); }
+        .level-icon { background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%); padding: 30px; text-align: center; }
+        .level-icon i { font-size: 60px; color: #fff; }
+        .level-content {
+            padding: 25px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .level-content h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #164ACF;
+            margin-bottom: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .level-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            flex: 1;
+        }
+        .level-btn {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #FD3223;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-top: auto;
+            align-self: center;
+        }
+        .level-btn:hover { background: #c40e00; }
+        @media (max-width: 1000px) { .levels-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+        @media (max-width: 600px) { .levels-grid { grid-template-columns: 1fr; } .admission-hero h1 { font-size: 28px; } }
+    </style>
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">
+            <div class="layout-center">
+                <div class="site-header-inner">
+                    <div class="site-header-logo">
+                        <a href="/" class="logo-link">
+                            <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                <i class="fa fa-university" style="font-size: 45px; color: #164ACF;"></i>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="site-header-title">
+                        <div class="header-sup">Федеральное государственное бюджетное образовательное учреждение высшего образования</div>
+                        <h1 class="header-main">Ижевский государственный университет</h1>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="nav-wrapper">
+            <div class="layout-center">
+                <div class="nav-container">
+                    <nav class="site-nav">
+                        <ul class="nav-menu">
+                            <li class="nav-item"><a href="/" class="nav-link">Университет</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Образование</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Студенческая жизнь</a></li>
+                            <li class="nav-item"><a href="#" class="nav-link">Международная деятельность</a></li>
+                            <li class="nav-item highlight"><a href="/admission" class="nav-link">Поступить в ИжГУ</a></li>
+                        </ul>
+                    </nav>
+                    <div class="user-actions">
+                        <button class="settings-btn" id="settingsBtn"><i class="fa fa-cog"></i></button>
+                        {% if session.user_id %}
+                            <a href="/cabinet" class="lk-btn"><i class="fa fa-user-circle"></i><span>Личный кабинет</span></a>
+                        {% else %}
+                            <a href="/login" class="lk-btn"><i class="fa fa-user-circle"></i><span>Личный кабинет</span></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="site-main">
+            <div class="admission-hero">
+                <div class="layout-center">
+                    <h1>Поступи в ИжГУ</h1>
+                    <p>Выбери уровень образования и открой дорогу к успешной карьере</p>
+                </div>
+            </div>
+            <div class="layout-center">
+                <div class="levels-grid">
+                    <div class="level-card" onclick="window.location.href='/admission/spo'">
+                        <div class="level-icon"><i class="fa fa-graduation-cap"></i></div>
+                        <div class="level-content">
+                            <h3>Среднее профессиональное образование</h3>
+                            <p>Колледж при ИжГУ. Обучение 2-3 года. Диплом о среднем профессиональном образовании.</p>
+                            <a href="/admission/spo" class="level-btn">Подать документы →</a>
+                        </div>
+                    </div>
+                    <div class="level-card" onclick="window.location.href='/admission/bachelor'">
+                        <div class="level-icon"><i class="fa fa-university"></i></div>
+                        <div class="level-content">
+                            <h3>Бакалавриат и специалитет</h3>
+                            <p>Обучение 4-5 лет. Диплом государственного образца о высшем образовании. Широкий выбор направлений подготовки.</p>
+                            <a href="/admission/bachelor" class="level-btn">Подать документы →</a>
+                        </div>
+                    </div>
+                    <div class="level-card" onclick="window.location.href='/admission/master'">
+                        <div class="level-icon"><i class="fa fa-star"></i></div>
+                        <div class="level-content">
+                            <h3>Магистратура</h3>
+                            <p>Обучение 2 года. Углубленная подготовка по выбранному направлению. Возможность продолжить научную карьеру.</p>
+                            <a href="/admission/master" class="level-btn">Подать документы →</a>
+                        </div>
+                    </div>
+                    <div class="level-card" onclick="window.location.href='/admission/postgraduate'">
+                        <div class="level-icon"><i class="fa fa-lightbulb-o"></i></div>
+                        <div class="level-content">
+                            <h3>Аспирантура</h3>
+                            <p>Обучение 3-4 года. Научная деятельность, подготовка диссертации. Присвоение ученой степени кандидата наук.</p>
+                            <a href="/admission/postgraduate" class="level-btn">Подать документы →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="layout-center">
+                <div class="footer-columns">
+                    <div class="footer-col">
+                        <div class="footer-copyright">© ФГБОУ ВО «Ижевский государственный университет»</div>
+                        <div class="footer-contacts">
+                            <p>426069, Удмуртская Республика, г. Ижевск, ул. Студенческая, 7</p>
+                            <p>Тел.: <a href="tel:+73412776055">(3412) 77-60-55</a></p>
+                            <p>Email: <a href="mailto:info@istu.ru">info@istu.ru</a></p>
+                        </div>
+                    </div>
+                    <div class="footer-col">
+                        <div class="footer-social">
+                            <a href="#" class="social-link">ВКонтакте</a>
+                            <a href="#" class="social-link">Telegram</a>
+                            <a href="#" class="social-link">Одноклассники</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>document.getElementById('settingsBtn')?.addEventListener('click', () => { console.log('Шестерёнка нажата'); });</script>
+</body>
+</html>

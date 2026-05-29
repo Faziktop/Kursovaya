@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр заявления №{{ application.id }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Roboto',Arial,sans-serif;background:#f0f2f5;padding:20px}
+        .container{max-width:1200px;margin:0 auto}
+        .card{background:#fff;border-radius:16px;padding:25px;margin-bottom:25px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+        .card h2{color:#164ACF;border-bottom:2px solid #164ACF;padding-bottom:10px;margin-bottom:20px;font-size:20px}
+        .card h2 i{margin-right:10px}
+        .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+        .info-item{padding:10px;background:#f8f9fa;border-radius:8px}
+        .info-label{font-weight:600;color:#666;font-size:12px;text-transform:uppercase}
+        .info-value{font-size:16px;color:#333;margin-top:5px}
+        .files-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px}
+        .file-item{background:#f8f9fa;padding:15px;border-radius:8px;display:flex;flex-direction:column;gap:10px}
+        .file-item img{max-width:100%;height:auto;border-radius:8px;cursor:pointer}
+        .file-link{color:#164ACF;text-decoration:none}
+        .btn-back{display:inline-block;margin-bottom:20px;color:#164ACF;text-decoration:none;padding:8px 16px;background:#fff;border-radius:8px}
+        .btn-back:hover{color:#FD3223}
+        .status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+        .status-pending{background:#ffc107;color:#333}
+        .status-exams{background:#2196F3;color:#fff}
+        .status-competitive{background:#9C27B0;color:#fff}
+        .image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;align-items:center;justify-content:center}
+        .image-modal.active{display:flex}
+        .image-modal img{max-width:90%;max-height:90%}
+        @media (max-width:768px){.info-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/rector/applications" class="btn-back"><i class="fa fa-arrow-left"></i> Назад</a>
+
+        <div class="card">
+            <h2><i class="fa fa-file-text-o"></i> Заявление №{{ application.id }}</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Статус</div>
+                    <div class="info-value">
+                        <span class="status-badge status-{{ application.status }}">
+                            {% if application.status == 'pending' %}На рассмотрении
+                            {% elif application.status == 'exams' %}На вступительных испытаниях
+                            {% elif application.status == 'competitive' %}На общем конкурсе
+                            {% elif application.status == 'approved' %}Предложение о зачислении
+                            {% elif application.status == 'consent_pending' %}Согласие получено
+                            {% elif application.status == 'enrolled' %}Зачислен
+                            {% else %}Отказано{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="info-item"><div class="info-label">Дата подачи</div><div class="info-value">{{ application.created_at.strftime('%d.%m.%Y %H:%M') }}</div></div>
+                <div class="info-item"><div class="info-label">ФИО абитуриента</div><div class="info-value">{{ user.fullname or 'Не указано' }}</div></div>
+                <div class="info-item"><div class="info-label">Email</div><div class="info-value">{{ user.email }}</div></div>
+                <div class="info-item"><div class="info-label">Телефон</div><div class="info-value">{{ user.phone or 'Не указан' }}</div></div>
+                <div class="info-item"><div class="info-label">Специальность</div><div class="info-value">{{ application.specialty.name if application.specialty else '-' }}</div></div>
+                <div class="info-item"><div class="info-label">Факультет</div><div class="info-value">{{ application.specialty.faculty.name if application.specialty and application.specialty.faculty else '-' }}</div></div>
+            </div>
+        </div>
+
+        {% if form_data %}
+        <div class="card">
+            <h2><i class="fa fa-id-card"></i> Данные из заявления</h2>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Фамилия</div><div class="info-value">{{ form_data.get('last_name', '-') }}</div></div>
+                <div class="info-item"><div class="info-label">Имя</div><div class="info-value">{{ form_data.get('first_name', '-') }}</div></div>
+                <div class="info-item"><div class="info-label">Отчество</div><div class="info-value">{{ form_data.get('patronymic', '-') }}</div></div>
+                <div class="info-item"><div class="info-label">Дата рождения</div><div class="info-value">{{ form_data.get('birth_date', '-') }}</div></div>
+                <div class="info-item"><div class="info-label">Тип документа об образовании</div><div class="info-value">{{ form_data.get('education_doc_type', '-') }}</div></div>
+                <div class="info-item"><div class="info-label">Тип льготы</div><div class="info-value">{{ form_data.get('benefit_type', '-') }}</div></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2><i class="fa fa-file-pdf-o"></i> Прикреплённые документы</h2>
+            {% if files %}
+            <div class="files-list">
+                {% for file in files %}
+                <div class="file-item">
+                    {% if file.name.endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                        <img src="/rector/applications/download/{{ application.id }}/{{ file.name }}" alt="{{ file.name }}" onclick="openImageModal(this.src)">
+                        <a href="/rector/applications/download/{{ application.id }}/{{ file.name }}" class="file-link" download><i class="fa fa-download"></i> {{ file.name }}</a>
+                    {% else %}
+                        <a href="/rector/applications/download/{{ application.id }}/{{ file.name }}" class="file-link" download><i class="fa fa-file-pdf-o"></i> {{ file.name }}</a>
+                    {% endif %}
+                    <span style="font-size:12px;color:#999;">{{ (file.size / 1024)|round }} KB</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="text-align:center; padding:30px;">Нет документов</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <img id="modalImage" src="">
+    </div>
+
+    <script>
+        function openImageModal(src) {
+            document.getElementById('imageModal').style.display = 'flex';
+            document.getElementById('modalImage').src = src;
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

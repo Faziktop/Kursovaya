@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи - Админ-панель ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <style>
+        * {
+            user-select: none;
+        }
+        .specialty-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .specialty-table td {
+            vertical-align: middle !important;
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .specialty-table th {
+            padding: 12px 10px;
+            background: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .specialty-table th:hover {
+            background: #e8eaf0;
+        }
+        .specialty-table th i.sort-icon {
+            margin-left: 8px;
+            font-size: 12px;
+            color: #999;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .specialty-table th:hover i.sort-icon {
+            opacity: 1;
+        }
+        .specialty-table th.asc i.sort-icon {
+            opacity: 1;
+            color: #164ACF;
+        }
+        .specialty-table th.asc i.sort-icon:before {
+            content: "\f0de";
+        }
+        .specialty-table th.desc i.sort-icon {
+            opacity: 1;
+            color: #164ACF;
+        }
+        .specialty-table th.desc i.sort-icon:before {
+            content: "\f0dd";
+        }
+        .specialty-table .actions-cell {
+            white-space: nowrap;
+            width: 140px;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-avatar .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-avatar .avatar-placeholder i {
+            font-size: 24px;
+            color: white;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #164ACF;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #fff;
+        }
+        .avatar-upload-overlay i {
+            font-size: 10px;
+            color: white;
+        }
+        .admin-table {
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .admin-table table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        .admin-table select {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        .btn-edit {
+            background: #164ACF;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-edit-user {
+            background: #164ACF;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .btn-edit-user:hover {
+            background: #0d2e8a;
+        }
+        .user-edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-edit-modal.active {
+            display: flex;
+        }
+        .user-edit-modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+        }
+        .user-edit-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #164ACF;
+        }
+        .user-edit-modal-header h3 {
+            color: #164ACF;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .close-modal:hover {
+            color: #f44336;
+        }
+        .edit-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .edit-form-full {
+            grid-column: span 2;
+        }
+        .edit-form-grid input, .edit-form-grid textarea, .edit-form-grid select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        .edit-form-grid label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #555;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 3px solid #164ACF;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-preview .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-preview .avatar-placeholder i {
+            font-size: 40px;
+            color: white;
+        }
+        .avatar-preview .avatar-upload-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #FD3223;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        .avatar-preview .avatar-upload-overlay i {
+            font-size: 14px;
+            color: white;
+        }
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .btn-save {
+            background: #164ACF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-save:hover {
+            background: #0d2e8a;
+        }
+        .btn-cancel {
+            background: #999;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #666;
+        }
+        .search-filter {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .search-input-filter {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .search-input-filter:focus {
+            outline: none;
+            border-color: #164ACF;
+        }
+        .role-form {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .role-form select {
+            flex: 1;
+            min-width: 120px;
+        }
+        .save-success {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+            animation: fadeOut 2s ease;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+        @media (max-width: 768px) {
+            .edit-form-grid {
+                grid-template-columns: 1fr;
+            }
+            .edit-form-full {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body class="admin-page">
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="admin-logo"><i class="fa fa-shield"></i> Admin Panel</div>
+            <nav class="admin-nav">
+                <a href="/admin" class="active"><i class="fa fa-dashboard"></i> Главная</a>
+                <a href="/admin/faculties"><i class="fa fa-university"></i> Факультеты</a>
+                <a href="/admin/specialties"><i class="fa fa-graduation-cap"></i> Специальности</a>
+                <a href="/admin/users"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/admin/faq"><i class="fa fa-question-circle"></i> FAQ</a>
+                <a href="/"><i class="fa fa-home"></i> На сайт</a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1><i class="fa fa-users"></i> Управление пользователями</h1>
+                <div class="admin-user">
+                    <i class="fa fa-user-circle"></i>
+                    <span>{{ session.user_name }}</span>
+                    <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i></a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="admin-card">
+                <h3><i class="fa fa-list"></i> Список пользователей</h3>
+
+                <div class="search-filter">
+                    <input type="text" id="searchInput" class="search-input-filter" placeholder="🔍 Поиск по ФИО, email, телефону, должности...">
+                </div>
+
+                <div class="admin-table">
+                    <table class="specialty-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th data-sort="id" class="sortable">ID <i class="fa fa-sort sort-icon"></i></th>
+                                <th data-sort="avatar">Аватар</th>
+                                <th data-sort="fullname" class="sortable">ФИО <i class="fa fa-sort sort-icon"></i></th>
+                                <th data-sort="email" class="sortable">Email <i class="fa fa-sort sort-icon"></i></th>
+                                <th data-sort="phone" class="sortable">Телефон <i class="fa fa-sort sort-icon"></i></th>
+                                <th data-sort="position" class="sortable">Должность <i class="fa fa-sort sort-icon"></i></th>
+                                <th data-sort="role">Роль</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            {% for u in users %}
+                            <tr data-user-id="{{ u.id }}">
+                                <td class="user-id">{{ u.id }}</td>
+                                <td>
+                                    <div class="user-avatar" style="margin: 0 auto;">
+                                        {% if u.avatar and u.avatar != '/static/uploads/avatars/default.png' %}
+                                            <img src="{{ u.avatar }}" alt="Аватар">
+                                        {% else %}
+                                            <div class="avatar-placeholder">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="fullname">{{ u.fullname or '-' }}</td>
+                                <td class="email">{{ u.email }}</td>
+                                <td class="phone">{{ u.phone or '-' }}</td>
+                                <td class="position">{{ u.position or '-' }}</td>
+                                <td>
+                                    <form method="POST" action="/admin/users/role/{{ u.id }}" class="role-form">
+                                        <select name="role">
+                                            <option value="authenticated" {% if u.role == 'authenticated' %}selected{% endif %}>Аутентифицирован</option>
+                                            <option value="applicant" {% if u.role == 'applicant' %}selected{% endif %}>Абитуриент</option>
+                                            <option value="student" {% if u.role == 'student' %}selected{% endif %}>Студент</option>
+                                            <option value="employee" {% if u.role == 'employee' %}selected{% endif %}>Сотрудник</option>
+                                            <option value="teacher" {% if u.role == 'teacher' %}selected{% endif %}>Преподаватель</option>
+                                            <option value="rector" {% if u.role == 'rector' %}selected{% endif %}>Ректор</option>
+                                            <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Администратор</option>
+                                        </select>
+                                        <button type="submit" class="btn-edit"><i class="fa fa-save"></i></button>
+                                    </form>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-edit-user" onclick="openEditModal({{ u.id }})"><i class="fa fa-edit"></i> Редактировать</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно редактирования пользователя -->
+    <div id="editModal" class="user-edit-modal">
+        <div class="user-edit-modal-content">
+            <div class="user-edit-modal-header">
+                <h3><i class="fa fa-user-edit"></i> Редактирование профиля</h3>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-form-grid">
+                <div class="edit-form-full" style="text-align: center;">
+                    <div class="avatar-preview" id="modalAvatarPreview" onclick="document.getElementById('avatarFileInput').click()">
+                        <div class="avatar-placeholder">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="avatar-upload-overlay">
+                            <i class="fa fa-camera"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display:none;">
+                    <input type="hidden" id="edit_avatar" value="">
+                    <p style="font-size: 12px; color: #999; margin-top: 5px;">Нажмите на аватар для загрузки файла</p>
+                </div>
+                <div class="edit-form-full">
+                    <label><i class="fa fa-user"></i> ФИО</label>
+                    <input type="text" id="edit_fullname" class="edit-input">
+                </div>
+                <div>
+                    <label><i class="fa fa-phone"></i> Телефон</label>
+                    <input type="text" id="edit_phone" class="edit-input">
+                </div>
+                <div>
+                    <label><i class="fa fa-briefcase"></i> Должность</label>
+                    <input type="text" id="edit_position" class="edit-input">
+                </div>
+                <div class="edit-form-full">
+                    <label><i class="fa fa-info-circle"></i> Биография</label>
+                    <textarea id="edit_bio" rows="4" class="edit-input"></textarea>
+                </div>
+            </div>
+            <div class="form-buttons">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">Отмена</button>
+                <button type="button" class="btn-save" onclick="saveUserChanges()"><i class="fa fa-save"></i> Сохранить изменения</button>
+            </div>
+            <div id="saveMessage" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+
+        // Загрузка аватара через файл
+        function setupAvatarUpload() {
+            const fileInput = document.getElementById('avatarFileInput');
+            if (fileInput) {
+                fileInput.onchange = async function() {
+                    const file = this.files[0];
+                    if (!file) return;
+
+                    if (!file.type.startsWith('image/')) {
+                        alert('Пожалуйста, выберите файл изображения');
+                        this.value = '';
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    formData.append('user_id', currentUserId);
+
+                    const uploadOverlay = document.querySelector('#modalAvatarPreview .avatar-upload-overlay');
+                    const originalHtml = uploadOverlay.innerHTML;
+                    uploadOverlay.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+                    try {
+                        const response = await fetch(`/admin/upload_user_avatar/${currentUserId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            // Обновляем превью
+                            const preview = document.getElementById('modalAvatarPreview');
+                            preview.innerHTML = `
+                                <img src="${data.avatar_path}?t=${Date.now()}" alt="Аватар" style="width: 100%; height: 100%; object-fit: cover;">
+                                <div class="avatar-upload-overlay">
+                                    <i class="fa fa-camera"></i>
+                                </div>
+                            `;
+                            // Обновляем скрытое поле
+                            document.getElementById('edit_avatar').value = data.avatar_path;
+                            // Обновляем аватар в таблице
+                            const row = document.querySelector(`#usersTableBody tr[data-user-id="${currentUserId}"]`);
+                            if (row) {
+                                const avatarCell = row.querySelector('td:nth-child(2)');
+                                avatarCell.innerHTML = `
+                                    <div class="user-avatar" style="margin: 0 auto;">
+                                        <img src="${data.avatar_path}?t=${Date.now()}" alt="Аватар" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                                    </div>
+                                `;
+                            }
+                            alert('Аватар успешно обновлён!');
+                        } else {
+                            alert('Ошибка: ' + (data.error || 'Не удалось обновить аватар'));
+                        }
+                    } catch(e) {
+                        console.error('Ошибка', e);
+                        alert('Ошибка при загрузке аватара');
+                    } finally {
+                        uploadOverlay.innerHTML = originalHtml;
+                        this.value = '';
+                    }
+                };
+            }
+        }
+
+        // Открыть модальное окно
+        async function openEditModal(userId) {
+            currentUserId = userId;
+            try {
+                const response = await fetch(`/admin/users/get/${userId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('edit_fullname').value = data.user.fullname || '';
+                    document.getElementById('edit_phone').value = data.user.phone || '';
+                    document.getElementById('edit_position').value = data.user.position || '';
+                    document.getElementById('edit_bio').value = data.user.bio || '';
+                    document.getElementById('edit_avatar').value = data.user.avatar || '';
+
+                    // Обновляем превью аватара
+                    const preview = document.getElementById('modalAvatarPreview');
+                    if (data.user.avatar && data.user.avatar != '/static/uploads/avatars/default.png') {
+                        preview.innerHTML = `
+                            <img src="${data.user.avatar}" alt="Аватар" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="avatar-upload-overlay">
+                                <i class="fa fa-camera"></i>
+                            </div>
+                        `;
+                    } else {
+                        preview.innerHTML = `
+                            <div class="avatar-placeholder">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <div class="avatar-upload-overlay">
+                                <i class="fa fa-camera"></i>
+                            </div>
+                        `;
+                    }
+                }
+            } catch(e) {
+                console.error('Ошибка загрузки данных пользователя', e);
+                alert('Ошибка загрузки данных пользователя');
+            }
+            document.getElementById('editModal').classList.add('active');
+            setupAvatarUpload();
+        }
+
+        // Сохранить изменения
+        async function saveUserChanges() {
+            if (!currentUserId) return;
+
+            const fullname = document.getElementById('edit_fullname').value;
+            const phone = document.getElementById('edit_phone').value;
+            const position = document.getElementById('edit_position').value;
+            const bio = document.getElementById('edit_bio').value;
+            const avatar = document.getElementById('edit_avatar').value;
+
+            try {
+                const response = await fetch(`/admin/users/update/${currentUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fullname: fullname,
+                        phone: phone,
+                        position: position,
+                        bio: bio,
+                        avatar: avatar
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const row = document.querySelector(`#usersTableBody tr[data-user-id="${currentUserId}"]`);
+                    if (row) {
+                        row.querySelector('.fullname').innerText = fullname || '-';
+                        row.querySelector('.phone').innerText = phone || '-';
+                        row.querySelector('.position').innerText = position || '-';
+                    }
+
+                    const messageDiv = document.getElementById('saveMessage');
+                    messageDiv.innerHTML = '<div class="save-success">✔ Данные успешно сохранены!</div>';
+                    messageDiv.style.display = 'block';
+
+                    setTimeout(() => {
+                        messageDiv.style.display = 'none';
+                        closeEditModal();
+                    }, 1500);
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Не удалось сохранить данные'));
+                }
+            } catch(e) {
+                console.error('Ошибка сохранения', e);
+                alert('Ошибка сохранения данных');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            currentUserId = null;
+            document.getElementById('saveMessage').style.display = 'none';
+        }
+
+        function sortTable(column, type = 'string') {
+            const tbody = document.getElementById('usersTableBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+
+                if (column === 'id') {
+                    aVal = parseInt(a.querySelector('.user-id')?.innerText);
+                    bVal = parseInt(b.querySelector('.user-id')?.innerText);
+                } else if (column === 'fullname') {
+                    aVal = a.querySelector('.fullname')?.innerText || '';
+                    bVal = b.querySelector('.fullname')?.innerText || '';
+                } else if (column === 'email') {
+                    aVal = a.querySelector('.email')?.innerText || '';
+                    bVal = b.querySelector('.email')?.innerText || '';
+                } else if (column === 'phone') {
+                    aVal = a.querySelector('.phone')?.innerText || '';
+                    bVal = b.querySelector('.phone')?.innerText || '';
+                } else if (column === 'position') {
+                    aVal = a.querySelector('.position')?.innerText || '';
+                    bVal = b.querySelector('.position')?.innerText || '';
+                } else {
+                    return 0;
+                }
+
+                if (currentSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+                const icon = th.querySelector('.sort-icon');
+                if (icon) icon.className = 'fa fa-sort sort-icon';
+            });
+
+            const currentTh = document.querySelector(`[data-sort="${column}"]`);
+            if (currentTh) {
+                currentTh.classList.add(currentSortDirection);
+                const icon = currentTh.querySelector('.sort-icon');
+                if (icon) icon.className = `fa fa-sort-${currentSortDirection === 'asc' ? 'asc' : 'desc'} sort-icon`;
+            }
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTableBody tr');
+
+            rows.forEach(row => {
+                const fullname = row.querySelector('.fullname')?.innerText.toLowerCase() || '';
+                const email = row.querySelector('.email')?.innerText.toLowerCase() || '';
+                const phone = row.querySelector('.phone')?.innerText.toLowerCase() || '';
+                const position = row.querySelector('.position')?.innerText.toLowerCase() || '';
+                const id = row.querySelector('.user-id')?.innerText || '';
+
+                const matches = fullname.includes(searchTerm) ||
+                               email.includes(searchTerm) ||
+                               phone.includes(searchTerm) ||
+                               position.includes(searchTerm) ||
+                               id.includes(searchTerm);
+
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
+        function initSorting() {
+            const headers = document.querySelectorAll('.sortable');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-sort');
+                    if (currentSortColumn === column) {
+                        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSortColumn = column;
+                        currentSortDirection = 'asc';
+                    }
+                    sortTable(column, column === 'id' ? 'number' : 'string');
+                });
+            });
+        }
+
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditModal();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSorting();
+        });
+    </script>
+</body>
+</html>

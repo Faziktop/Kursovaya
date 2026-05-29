@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подача документов - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Roboto',Arial,sans-serif;background:#f0f2f5}
+        .apply-container{max-width:900px;margin:40px auto;padding:0 20px}
+        .apply-header{background:linear-gradient(135deg,#164ACF,#0d2e8a);padding:30px;border-radius:20px 20px 0 0;color:#fff}
+        .apply-header h1{font-size:28px;margin-bottom:10px}
+        .apply-header p{opacity:0.9}
+        .apply-form{background:#fff;border-radius:0 0 20px 20px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+        .form-section{margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid #eee}
+        .form-section h3{color:#164ACF;margin-bottom:20px;font-size:20px}
+        .form-section h3 i{width:30px}
+        .form-row{margin-bottom:20px}
+        .form-row label{display:block;margin-bottom:8px;font-weight:600;color:#333}
+        .form-row label i{color:#164ACF;width:20px}
+        .form-row input[type="text"],
+        .form-row input[type="date"],
+        .form-row input[type="email"],
+        .form-row input[type="tel"],
+        .form-row select{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:12px;font-size:15px;transition:border-color 0.2s}
+        .form-row input:focus{border-color:#164ACF;outline:none}
+        .form-row input[type="file"]{padding:10px;border:2px dashed #e0e0e0;border-radius:12px;background:#fafafa}
+        .form-row small{display:block;color:#999;font-size:12px;margin-top:5px}
+        .checkbox-row{display:flex;align-items:center;gap:10px;margin:20px 0}
+        .checkbox-row input{width:20px;height:20px}
+        .btn-submit{width:100%;padding:15px;background:linear-gradient(135deg,#164ACF,#0d2e8a);color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;transition:transform 0.2s}
+        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(22,74,207,0.3)}
+        .back-link{display:inline-block;margin-bottom:20px;color:#164ACF;text-decoration:none}
+        .back-link:hover{color:#FD3223}
+        .alert{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000;padding:15px 25px;border-radius:10px}
+        .alert-success{background:#4CAF50;color:#fff}
+        .alert-error{background:#f44336;color:#fff}
+        .two-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media (max-width:768px){.two-columns{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="apply-container">
+        <a href="/specialty/{{ specialty.id }}" class="back-link"><i class="fa fa-arrow-left"></i> Назад к специальности</a>
+
+        <div class="apply-header">
+            <h1><i class="fa fa-file-text-o"></i> Подача документов</h1>
+            <p>Специальность: {{ specialty.name }}</p>
+            <p>Факультет: {{ specialty.faculty.name }}</p>
+            <p><strong>Код: {{ specialty.code }}</strong></p>
+        </div>
+
+        <form class="apply-form" method="POST" action="/apply/{{ specialty.id }}" enctype="multipart/form-data">
+            <div class="form-section">
+                <h3><i class="fa fa-id-card"></i> Паспортные данные</h3>
+                <div class="two-columns">
+                    <div class="form-row">
+                        <label><i class="fa fa-user"></i> Фамилия *</label>
+                        <input type="text" name="last_name" required value="{{ user.fullname.split()[0] if user.fullname else '' }}">
+                    </div>
+                    <div class="form-row">
+                        <label><i class="fa fa-user"></i> Имя *</label>
+                        <input type="text" name="first_name" required value="{{ user.fullname.split()[1] if user.fullname and user.fullname.split()|length > 1 else '' }}">
+                    </div>
+                    <div class="form-row">
+                        <label><i class="fa fa-user"></i> Отчество</label>
+                        <input type="text" name="patronymic" value="{{ user.fullname.split()[2] if user.fullname and user.fullname.split()|length > 2 else '' }}">
+                    </div>
+                    <div class="form-row">
+                        <label><i class="fa fa-calendar"></i> Дата рождения *</label>
+                        <input type="date" name="birth_date" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fa fa-file-pdf-o"></i> Паспорт оригинал (скан/фото)</h3>
+                <div class="form-row">
+                    <input type="file" name="passport" accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small>Принимаются файлы: PDF, JPG, JPEG, PNG. Максимальный размер: 10MB</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fa fa-credit-card"></i> СНИЛС оригинал (скан/фото)</h3>
+                <div class="form-row">
+                    <input type="file" name="snils" accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small>Принимаются файлы: PDF, JPG, JPEG, PNG. Максимальный размер: 10MB</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fa fa-graduation-cap"></i> Документ об образовании</h3>
+                <div class="form-row">
+                    <label>Тип документа *</label>
+                    <select name="education_doc_type" required>
+                        <option value="school_9">Аттестат 9 классов</option>
+                        <option value="school_11">Аттестат 11 классов</option>
+                        <option value="college">Диплом колледжа/техникума</option>
+                        <option value="university">Диплом вуза</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Скан/фото документа *</label>
+                    <input type="file" name="education_doc" accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small>Принимаются файлы: PDF, JPG, JPEG, PNG. Максимальный размер: 10MB</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fa fa-plus-circle"></i> Дополнительные документы</h3>
+                <div class="form-row">
+                    <label>Дополнительные документы (при наличии)</label>
+                    <input type="file" name="additional_docs" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                    <small>Вы можете загрузить несколько файлов: аттестаты, сертификаты, грамоты и т.д.</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fa fa-heart"></i> Документы о льготах</h3>
+                <div class="form-row">
+                    <label>Выберите тип льготы (можно несколько):</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="disabled"> Инвалидность
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="orphan"> Сиротство
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="veteran"> Ветеранские льготы
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="target"> Целевое направление
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="olympiad"> Победитель олимпиад
+                        </label>
+                    </div>
+                    <small>Выберите все применимые льготы</small>
+                </div>
+                <div class="form-row">
+                    <label>Подтверждающий документ</label>
+                    <input type="file" name="benefit_doc" accept=".pdf,.jpg,.jpeg,.png">
+                    <small>При наличии льгот приложите подтверждающие документы</small>
+                </div>
+            </div>
+
+            <div class="checkbox-row">
+                <input type="checkbox" name="consent" id="consent" required>
+                <label for="consent">Я даю согласие на обработку персональных данных</label>
+            </div>
+
+            <button type="submit" class="btn-submit"><i class="fa fa-paper-plane"></i> Подать документы</button>
+        </form>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
