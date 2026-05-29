@@ -155,7 +155,7 @@
             background: white;
             border-radius: 20px;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 25px;
@@ -205,6 +205,57 @@
             font-size: 13px;
             color: #555;
         }
+        .exams-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+        .exams-section h4 {
+            color: #164ACF;
+            margin-bottom: 15px;
+        }
+        .exam-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .exam-row input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .exam-row input.exam-score {
+            width: 80px;
+            flex: none;
+        }
+        .exam-row button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .exam-row button:hover {
+            background: #d32f2f;
+        }
+        .btn-add-exam {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        .btn-add-exam:hover {
+            background: #45a049;
+        }
         .form-buttons {
             display: flex;
             gap: 10px;
@@ -231,6 +282,9 @@
             padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
+        }
+        .btn-cancel:hover {
+            background: #666;
         }
         .save-success {
             background: #4CAF50;
@@ -265,6 +319,13 @@
             .edit-form-full {
                 grid-column: span 1;
             }
+            .exam-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .exam-row input.exam-score {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -273,10 +334,11 @@
         <aside class="admin-sidebar">
             <div class="admin-logo"><i class="fa fa-shield"></i> Admin Panel</div>
             <nav class="admin-nav">
-                <a href="/admin"><i class="fa fa-dashboard"></i> Главная</a>
+                <a href="/admin" class="active"><i class="fa fa-dashboard"></i> Главная</a>
                 <a href="/admin/faculties"><i class="fa fa-university"></i> Факультеты</a>
-                <a href="/admin/specialties" class="active"><i class="fa fa-graduation-cap"></i> Специальности</a>
+                <a href="/admin/specialties"><i class="fa fa-graduation-cap"></i> Специальности</a>
                 <a href="/admin/users"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/admin/faq"><i class="fa fa-question-circle"></i> FAQ</a>
                 <a href="/"><i class="fa fa-home"></i> На сайт</a>
             </nav>
         </aside>
@@ -443,23 +505,8 @@
                                        onclick="return confirm('Удалить специальность?')">
                                         <i class="fa fa-trash"></i> Удалить
                                     </a>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </div>
-                                 </td>
-                             </tr>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -546,6 +593,14 @@
                     <input type="text" id="edit_head_id" placeholder="ID руководителя">
                 </div>
             </div>
+
+            <!-- Секция вступительных испытаний -->
+            <div class="exams-section">
+                <h4><i class="fa fa-pencil-square-o"></i> Вступительные испытания</h4>
+                <div id="examsList"></div>
+                <button type="button" class="btn-add-exam" onclick="addExamRow()"><i class="fa fa-plus"></i> Добавить экзамен</button>
+            </div>
+
             <div class="form-buttons">
                 <button type="button" class="btn-cancel" onclick="closeEditModal()">Отмена</button>
                 <button type="button" class="btn-save" onclick="saveSpecialtyChanges()"><i class="fa fa-save"></i> Сохранить</button>
@@ -555,76 +610,50 @@
     </div>
 
     <script>
-        const users = [
-            {% for u in users %}
-            {
-                id: {{ u.id }},
-                fullname: "{{ u.fullname }}",
-                position: "{{ u.position or 'Сотрудник' }}",
-                email: "{{ u.email }}"
-            },
-            {% endfor %}
-        ];
-
         let currentSpecialtyId = null;
         let currentSortColumn = null;
         let currentSortDirection = 'asc';
+        let exams = [];
 
-        // Сортировка таблицы
-        function sortSpecialtyTable(column) {
-            const tbody = document.querySelector('#specialtiesTable tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
+        function addExamRow(name = '', minScore = 30) {
+            const container = document.getElementById('examsList');
+            const row = document.createElement('div');
+            row.className = 'exam-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Название экзамена" value="${name}" style="flex: 2;">
+                <input type="number" class="exam-score" placeholder="Мин. балл" value="${minScore}" style="width: 100px;">
+                <button type="button" onclick="this.parentElement.remove()"><i class="fa fa-trash"></i> Удалить</button>
+            `;
+            container.appendChild(row);
+        }
 
-            rows.sort((a, b) => {
-                let aVal, bVal;
-                if (column === 'id') {
-                    aVal = parseInt(a.querySelector('.spec-id').innerText);
-                    bVal = parseInt(b.querySelector('.spec-id').innerText);
-                } else if (column === 'code') {
-                    aVal = a.querySelector('.spec-code').innerText;
-                    bVal = b.querySelector('.spec-code').innerText;
-                } else if (column === 'name') {
-                    aVal = a.querySelector('.spec-name').innerText.toLowerCase();
-                    bVal = b.querySelector('.spec-name').innerText.toLowerCase();
-                } else if (column === 'faculty') {
-                    aVal = a.querySelector('.spec-faculty').innerText.toLowerCase();
-                    bVal = b.querySelector('.spec-faculty').innerText.toLowerCase();
-                } else if (column === 'level') {
-                    aVal = a.querySelector('.spec-level').innerText;
-                    bVal = b.querySelector('.spec-level').innerText;
-                }
-
-                if (currentSortDirection === 'asc') {
-                    return aVal > bVal ? 1 : -1;
-                } else {
-                    return aVal < bVal ? 1 : -1;
-                }
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-
-            document.querySelectorAll('.sortable').forEach(th => {
-                th.classList.remove('asc', 'desc');
-            });
-            const currentTh = document.querySelector(`[data-sort="${column}"]`);
-            if (currentTh) {
-                currentTh.classList.add(currentSortDirection);
+        function loadExamsToForm(examsData) {
+            const container = document.getElementById('examsList');
+            container.innerHTML = '';
+            exams = examsData || [];
+            if (exams.length === 0) {
+                addExamRow('', 30);
+            } else {
+                exams.forEach(exam => {
+                    addExamRow(exam.name, exam.min_score);
+                });
             }
         }
 
-        // Фильтрация
-        function filterSpecialtyTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#specialtiesTable tbody tr');
+        function collectExamsFromForm() {
+            const rows = document.querySelectorAll('#examsList .exam-row');
+            const examsData = [];
             rows.forEach(row => {
-                const code = row.querySelector('.spec-code')?.innerText.toLowerCase() || '';
-                const name = row.querySelector('.spec-name')?.innerText.toLowerCase() || '';
-                const faculty = row.querySelector('.spec-faculty')?.innerText.toLowerCase() || '';
-                row.style.display = (code.includes(searchTerm) || name.includes(searchTerm) || faculty.includes(searchTerm)) ? '' : 'none';
+                const inputs = row.querySelectorAll('input');
+                const name = inputs[0]?.value.trim();
+                const minScore = parseInt(inputs[1]?.value) || 30;
+                if (name) {
+                    examsData.push({ name: name, min_score: minScore });
+                }
             });
+            return examsData;
         }
 
-        // Открыть модальное окно
         async function openEditModal(specialtyId) {
             currentSpecialtyId = specialtyId;
             try {
@@ -645,6 +674,9 @@
                     document.getElementById('edit_competencies').value = data.specialty.competencies || '';
                     document.getElementById('edit_disciplines').value = data.specialty.disciplines || '';
                     document.getElementById('edit_head_id').value = data.specialty.head_id || '';
+
+                    // Загружаем экзамены
+                    loadExamsToForm(data.exams || []);
                 }
             } catch(e) {
                 console.error('Ошибка загрузки данных', e);
@@ -653,9 +685,10 @@
             document.getElementById('editModal').classList.add('active');
         }
 
-        // Сохранить изменения
         async function saveSpecialtyChanges() {
             if (!currentSpecialtyId) return;
+
+            const examsData = collectExamsFromForm();
 
             const data = {
                 code: document.getElementById('edit_code').value,
@@ -671,7 +704,8 @@
                 location: document.getElementById('edit_location').value,
                 competencies: document.getElementById('edit_competencies').value,
                 disciplines: document.getElementById('edit_disciplines').value,
-                head_id: document.getElementById('edit_head_id').value || null
+                head_id: document.getElementById('edit_head_id').value || null,
+                exams: examsData
             };
 
             try {
@@ -708,6 +742,50 @@
             document.getElementById('saveMessage').style.display = 'none';
         }
 
+        function sortSpecialtyTable(column) {
+            const tbody = document.querySelector('#specialtiesTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                if (column === 'id') {
+                    aVal = parseInt(a.querySelector('.spec-id').innerText);
+                    bVal = parseInt(b.querySelector('.spec-id').innerText);
+                } else if (column === 'code') {
+                    aVal = a.querySelector('.spec-code').innerText;
+                    bVal = b.querySelector('.spec-code').innerText;
+                } else if (column === 'name') {
+                    aVal = a.querySelector('.spec-name').innerText.toLowerCase();
+                    bVal = b.querySelector('.spec-name').innerText.toLowerCase();
+                } else if (column === 'faculty') {
+                    aVal = a.querySelector('.spec-faculty').innerText.toLowerCase();
+                    bVal = b.querySelector('.spec-faculty').innerText.toLowerCase();
+                } else if (column === 'level') {
+                    aVal = a.querySelector('.spec-level').innerText;
+                    bVal = b.querySelector('.spec-level').innerText;
+                }
+                if (currentSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            rows.forEach(row => tbody.appendChild(row));
+            document.querySelectorAll('.sortable').forEach(th => th.classList.remove('asc', 'desc'));
+            const currentTh = document.querySelector(`[data-sort="${column}"]`);
+            if (currentTh) currentTh.classList.add(currentSortDirection);
+        }
+
+        function filterSpecialtyTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#specialtiesTable tbody tr');
+            rows.forEach(row => {
+                const code = row.querySelector('.spec-code')?.innerText.toLowerCase() || '';
+                const name = row.querySelector('.spec-name')?.innerText.toLowerCase() || '';
+                const faculty = row.querySelector('.spec-faculty')?.innerText.toLowerCase() || '';
+                row.style.display = (code.includes(searchTerm) || name.includes(searchTerm) || faculty.includes(searchTerm)) ? '' : 'none';
+            });
+        }
+
         function initSorting() {
             const headers = document.querySelectorAll('.sortable');
             headers.forEach(header => {
@@ -723,6 +801,13 @@
                 });
             });
         }
+
+        // Поиск руководителя
+        const users = [
+            {% for u in users %}
+            {id: {{ u.id }}, fullname: "{{ u.fullname }}", position: "{{ u.position or 'Сотрудник' }}", email: "{{ u.email }}"},
+            {% endfor %}
+        ];
 
         let currentSearchTimeout;
         function searchUsers(query) {
@@ -771,8 +856,7 @@
             }
             if (currentSearchTimeout) clearTimeout(currentSearchTimeout);
             currentSearchTimeout = setTimeout(() => {
-                const results = searchUsers(query);
-                renderSearchResults(results);
+                renderSearchResults(searchUsers(query));
             }, 300);
         });
 

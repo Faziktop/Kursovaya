@@ -120,18 +120,30 @@
             <div class="form-section">
                 <h3><i class="fa fa-heart"></i> Документы о льготах</h3>
                 <div class="form-row">
-                    <label>Тип льготы</label>
-                    <select name="benefit_type">
-                        <option value="none">Нет льгот</option>
-                        <option value="disabled">Инвалидность</option>
-                        <option value="orphan">Сиротство</option>
-                        <option value="veteran">Ветеранские льготы</option>
-                        <option value="target">Целевое направление</option>
-                    </select>
+                    <label>Выберите тип льготы (можно несколько):</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="disabled"> Инвалидность
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="orphan"> Сиротство
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="veteran"> Ветеранские льготы
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="target"> Целевое направление
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="benefits" value="olympiad"> Победитель олимпиад
+                        </label>
+                    </div>
+                    <small>Выберите все применимые льготы</small>
                 </div>
                 <div class="form-row">
                     <label>Подтверждающий документ</label>
                     <input type="file" name="benefit_doc" accept=".pdf,.jpg,.jpeg,.png">
+                    <small>При наличии льгот приложите подтверждающие документы</small>
                 </div>
             </div>
 

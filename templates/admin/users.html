@@ -60,17 +60,46 @@
             width: 140px;
         }
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-avatar .avatar-placeholder {
+            width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .user-avatar .avatar-placeholder i {
+            font-size: 24px;
             color: white;
         }
-        .user-avatar i {
-            font-size: 20px;
+        .avatar-upload-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #164ACF;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #fff;
+        }
+        .avatar-upload-overlay i {
+            font-size: 10px;
+            color: white;
         }
         .admin-table {
             overflow-x: auto;
@@ -178,6 +207,51 @@
             font-size: 13px;
             color: #555;
         }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 3px solid #164ACF;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-preview .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-preview .avatar-placeholder i {
+            font-size: 40px;
+            color: white;
+        }
+        .avatar-preview .avatar-upload-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #FD3223;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        .avatar-preview .avatar-upload-overlay i {
+            font-size: 14px;
+            color: white;
+        }
         .form-buttons {
             display: flex;
             gap: 10px;
@@ -208,20 +282,6 @@
         .btn-cancel:hover {
             background: #666;
         }
-        .avatar-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-        }
-        .avatar-preview i {
-            font-size: 40px;
-            color: white;
-        }
         .search-filter {
             margin-bottom: 20px;
             display: flex;
@@ -239,14 +299,6 @@
             outline: none;
             border-color: #164ACF;
         }
-        @media (max-width: 768px) {
-            .edit-form-grid {
-                grid-template-columns: 1fr;
-            }
-            .edit-form-full {
-                grid-column: span 1;
-            }
-        }
         .role-form {
             display: flex;
             gap: 5px;
@@ -256,10 +308,6 @@
         .role-form select {
             flex: 1;
             min-width: 120px;
-        }
-        .loading {
-            opacity: 0.5;
-            pointer-events: none;
         }
         .save-success {
             background: #4CAF50;
@@ -275,6 +323,14 @@
             70% { opacity: 1; }
             100% { opacity: 0; display: none; }
         }
+        @media (max-width: 768px) {
+            .edit-form-grid {
+                grid-template-columns: 1fr;
+            }
+            .edit-form-full {
+                grid-column: span 1;
+            }
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -282,10 +338,11 @@
         <aside class="admin-sidebar">
             <div class="admin-logo"><i class="fa fa-shield"></i> Admin Panel</div>
             <nav class="admin-nav">
-                <a href="/admin"><i class="fa fa-dashboard"></i> Главная</a>
+                <a href="/admin" class="active"><i class="fa fa-dashboard"></i> Главная</a>
                 <a href="/admin/faculties"><i class="fa fa-university"></i> Факультеты</a>
                 <a href="/admin/specialties"><i class="fa fa-graduation-cap"></i> Специальности</a>
-                <a href="/admin/users" class="active"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/admin/users"><i class="fa fa-users"></i> Пользователи</a>
+                <a href="/admin/faq"><i class="fa fa-question-circle"></i> FAQ</a>
                 <a href="/"><i class="fa fa-home"></i> На сайт</a>
             </nav>
         </aside>
@@ -311,7 +368,6 @@
             <div class="admin-card">
                 <h3><i class="fa fa-list"></i> Список пользователей</h3>
 
-                <!-- Поиск -->
                 <div class="search-filter">
                     <input type="text" id="searchInput" class="search-input-filter" placeholder="🔍 Поиск по ФИО, email, телефону, должности...">
                 </div>
@@ -333,9 +389,17 @@
                         <tbody id="usersTableBody">
                             {% for u in users %}
                             <tr data-user-id="{{ u.id }}">
-                                <td>{{ u.id }}</td>
+                                <td class="user-id">{{ u.id }}</td>
                                 <td>
-                                    <div class="user-avatar"><i class="fa fa-user"></i></div>
+                                    <div class="user-avatar" style="margin: 0 auto;">
+                                        {% if u.avatar and u.avatar != '/static/uploads/avatars/default.png' %}
+                                            <img src="{{ u.avatar }}" alt="Аватар">
+                                        {% else %}
+                                            <div class="avatar-placeholder">
+                                                <i class="fa fa-user"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td class="fullname">{{ u.fullname or '-' }}</td>
                                 <td class="email">{{ u.email }}</td>
@@ -349,6 +413,7 @@
                                             <option value="student" {% if u.role == 'student' %}selected{% endif %}>Студент</option>
                                             <option value="employee" {% if u.role == 'employee' %}selected{% endif %}>Сотрудник</option>
                                             <option value="teacher" {% if u.role == 'teacher' %}selected{% endif %}>Преподаватель</option>
+                                            <option value="rector" {% if u.role == 'rector' %}selected{% endif %}>Ректор</option>
                                             <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Администратор</option>
                                         </select>
                                         <button type="submit" class="btn-edit"><i class="fa fa-save"></i></button>
@@ -371,13 +436,21 @@
         <div class="user-edit-modal-content">
             <div class="user-edit-modal-header">
                 <h3><i class="fa fa-user-edit"></i> Редактирование профиля</h3>
-                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
             </div>
             <div class="edit-form-grid">
                 <div class="edit-form-full" style="text-align: center;">
-                    <div class="avatar-preview" id="modalAvatarPreview">
-                        <i class="fa fa-user"></i>
+                    <div class="avatar-preview" id="modalAvatarPreview" onclick="document.getElementById('avatarFileInput').click()">
+                        <div class="avatar-placeholder">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="avatar-upload-overlay">
+                            <i class="fa fa-camera"></i>
+                        </div>
                     </div>
+                    <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display:none;">
+                    <input type="hidden" id="edit_avatar" value="">
+                    <p style="font-size: 12px; color: #999; margin-top: 5px;">Нажмите на аватар для загрузки файла</p>
                 </div>
                 <div class="edit-form-full">
                     <label><i class="fa fa-user"></i> ФИО</label>
@@ -395,10 +468,6 @@
                     <label><i class="fa fa-info-circle"></i> Биография</label>
                     <textarea id="edit_bio" rows="4" class="edit-input"></textarea>
                 </div>
-                <div class="edit-form-full">
-                    <label><i class="fa fa-picture-o"></i> Аватар (URL)</label>
-                    <input type="text" id="edit_avatar" class="edit-input" placeholder="https://example.com/avatar.jpg">
-                </div>
             </div>
             <div class="form-buttons">
                 <button type="button" class="btn-cancel" onclick="closeEditModal()">Отмена</button>
@@ -412,102 +481,69 @@
         let currentUserId = null;
         let currentSortColumn = null;
         let currentSortDirection = 'asc';
-        let originalUsersData = [];
 
-        // Сохраняем оригинальные данные пользователей
-        function initUserData() {
-            const rows = document.querySelectorAll('#usersTableBody tr');
-            originalUsersData = Array.from(rows).map(row => ({
-                element: row,
-                id: parseInt(row.querySelector('td:first-child').innerText),
-                fullname: row.querySelector('.fullname')?.innerText || '',
-                email: row.querySelector('.email')?.innerText || '',
-                phone: row.querySelector('.phone')?.innerText || '',
-                position: row.querySelector('.position')?.innerText || '',
-                role: row.querySelector('select')?.value || ''
-            }));
-        }
+        // Загрузка аватара через файл
+        function setupAvatarUpload() {
+            const fileInput = document.getElementById('avatarFileInput');
+            if (fileInput) {
+                fileInput.onchange = async function() {
+                    const file = this.files[0];
+                    if (!file) return;
 
-        // Сортировка таблицы
-        function sortTable(column, type = 'string') {
-            const tbody = document.getElementById('usersTableBody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
+                    if (!file.type.startsWith('image/')) {
+                        alert('Пожалуйста, выберите файл изображения');
+                        this.value = '';
+                        return;
+                    }
 
-            rows.sort((a, b) => {
-                let aVal, bVal;
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    formData.append('user_id', currentUserId);
 
-                if (column === 'id') {
-                    aVal = parseInt(a.querySelector('td:first-child').innerText);
-                    bVal = parseInt(b.querySelector('td:first-child').innerText);
-                } else if (column === 'fullname') {
-                    aVal = a.querySelector('.fullname')?.innerText || '';
-                    bVal = b.querySelector('.fullname')?.innerText || '';
-                } else if (column === 'email') {
-                    aVal = a.querySelector('.email')?.innerText || '';
-                    bVal = b.querySelector('.email')?.innerText || '';
-                } else if (column === 'phone') {
-                    aVal = a.querySelector('.phone')?.innerText || '';
-                    bVal = b.querySelector('.phone')?.innerText || '';
-                } else if (column === 'position') {
-                    aVal = a.querySelector('.position')?.innerText || '';
-                    bVal = b.querySelector('.position')?.innerText || '';
-                } else {
-                    return 0;
-                }
+                    const uploadOverlay = document.querySelector('#modalAvatarPreview .avatar-upload-overlay');
+                    const originalHtml = uploadOverlay.innerHTML;
+                    uploadOverlay.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
-                if (type === 'number') {
-                    aVal = parseFloat(aVal) || 0;
-                    bVal = parseFloat(bVal) || 0;
-                }
-
-                if (currentSortDirection === 'asc') {
-                    return aVal > bVal ? 1 : -1;
-                } else {
-                    return aVal < bVal ? 1 : -1;
-                }
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-
-            // Обновляем иконки
-            document.querySelectorAll('.sortable').forEach(th => {
-                th.classList.remove('asc', 'desc');
-                const icon = th.querySelector('.sort-icon');
-                if (icon) {
-                    icon.className = 'fa fa-sort sort-icon';
-                }
-            });
-
-            const currentTh = document.querySelector(`[data-sort="${column}"]`);
-            if (currentTh) {
-                currentTh.classList.add(currentSortDirection);
-                const icon = currentTh.querySelector('.sort-icon');
-                if (icon) {
-                    icon.className = `fa fa-sort-${currentSortDirection === 'asc' ? 'asc' : 'desc'} sort-icon`;
-                }
+                    try {
+                        const response = await fetch(`/admin/upload_user_avatar/${currentUserId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            // Обновляем превью
+                            const preview = document.getElementById('modalAvatarPreview');
+                            preview.innerHTML = `
+                                <img src="${data.avatar_path}?t=${Date.now()}" alt="Аватар" style="width: 100%; height: 100%; object-fit: cover;">
+                                <div class="avatar-upload-overlay">
+                                    <i class="fa fa-camera"></i>
+                                </div>
+                            `;
+                            // Обновляем скрытое поле
+                            document.getElementById('edit_avatar').value = data.avatar_path;
+                            // Обновляем аватар в таблице
+                            const row = document.querySelector(`#usersTableBody tr[data-user-id="${currentUserId}"]`);
+                            if (row) {
+                                const avatarCell = row.querySelector('td:nth-child(2)');
+                                avatarCell.innerHTML = `
+                                    <div class="user-avatar" style="margin: 0 auto;">
+                                        <img src="${data.avatar_path}?t=${Date.now()}" alt="Аватар" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                                    </div>
+                                `;
+                            }
+                            alert('Аватар успешно обновлён!');
+                        } else {
+                            alert('Ошибка: ' + (data.error || 'Не удалось обновить аватар'));
+                        }
+                    } catch(e) {
+                        console.error('Ошибка', e);
+                        alert('Ошибка при загрузке аватара');
+                    } finally {
+                        uploadOverlay.innerHTML = originalHtml;
+                        this.value = '';
+                    }
+                };
             }
-        }
-
-        // Фильтрация таблицы
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#usersTableBody tr');
-
-            rows.forEach(row => {
-                const fullname = row.querySelector('.fullname')?.innerText.toLowerCase() || '';
-                const email = row.querySelector('.email')?.innerText.toLowerCase() || '';
-                const phone = row.querySelector('.phone')?.innerText.toLowerCase() || '';
-                const position = row.querySelector('.position')?.innerText.toLowerCase() || '';
-                const id = row.querySelector('td:first-child')?.innerText || '';
-
-                const matches = fullname.includes(searchTerm) ||
-                               email.includes(searchTerm) ||
-                               phone.includes(searchTerm) ||
-                               position.includes(searchTerm) ||
-                               id.includes(searchTerm);
-
-                row.style.display = matches ? '' : 'none';
-            });
         }
 
         // Открыть модальное окно
@@ -522,12 +558,33 @@
                     document.getElementById('edit_position').value = data.user.position || '';
                     document.getElementById('edit_bio').value = data.user.bio || '';
                     document.getElementById('edit_avatar').value = data.user.avatar || '';
+
+                    // Обновляем превью аватара
+                    const preview = document.getElementById('modalAvatarPreview');
+                    if (data.user.avatar && data.user.avatar != '/static/uploads/avatars/default.png') {
+                        preview.innerHTML = `
+                            <img src="${data.user.avatar}" alt="Аватар" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="avatar-upload-overlay">
+                                <i class="fa fa-camera"></i>
+                            </div>
+                        `;
+                    } else {
+                        preview.innerHTML = `
+                            <div class="avatar-placeholder">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <div class="avatar-upload-overlay">
+                                <i class="fa fa-camera"></i>
+                            </div>
+                        `;
+                    }
                 }
             } catch(e) {
                 console.error('Ошибка загрузки данных пользователя', e);
                 alert('Ошибка загрузки данных пользователя');
             }
             document.getElementById('editModal').classList.add('active');
+            setupAvatarUpload();
         }
 
         // Сохранить изменения
@@ -558,7 +615,6 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Обновляем данные в таблице
                     const row = document.querySelector(`#usersTableBody tr[data-user-id="${currentUserId}"]`);
                     if (row) {
                         row.querySelector('.fullname').innerText = fullname || '-';
@@ -566,7 +622,6 @@
                         row.querySelector('.position').innerText = position || '-';
                     }
 
-                    // Показываем сообщение об успехе
                     const messageDiv = document.getElementById('saveMessage');
                     messageDiv.innerHTML = '<div class="save-success">✔ Данные успешно сохранены!</div>';
                     messageDiv.style.display = 'block';
@@ -590,7 +645,76 @@
             document.getElementById('saveMessage').style.display = 'none';
         }
 
-        // Инициализация сортировки
+        function sortTable(column, type = 'string') {
+            const tbody = document.getElementById('usersTableBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let aVal, bVal;
+
+                if (column === 'id') {
+                    aVal = parseInt(a.querySelector('.user-id')?.innerText);
+                    bVal = parseInt(b.querySelector('.user-id')?.innerText);
+                } else if (column === 'fullname') {
+                    aVal = a.querySelector('.fullname')?.innerText || '';
+                    bVal = b.querySelector('.fullname')?.innerText || '';
+                } else if (column === 'email') {
+                    aVal = a.querySelector('.email')?.innerText || '';
+                    bVal = b.querySelector('.email')?.innerText || '';
+                } else if (column === 'phone') {
+                    aVal = a.querySelector('.phone')?.innerText || '';
+                    bVal = b.querySelector('.phone')?.innerText || '';
+                } else if (column === 'position') {
+                    aVal = a.querySelector('.position')?.innerText || '';
+                    bVal = b.querySelector('.position')?.innerText || '';
+                } else {
+                    return 0;
+                }
+
+                if (currentSortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+                const icon = th.querySelector('.sort-icon');
+                if (icon) icon.className = 'fa fa-sort sort-icon';
+            });
+
+            const currentTh = document.querySelector(`[data-sort="${column}"]`);
+            if (currentTh) {
+                currentTh.classList.add(currentSortDirection);
+                const icon = currentTh.querySelector('.sort-icon');
+                if (icon) icon.className = `fa fa-sort-${currentSortDirection === 'asc' ? 'asc' : 'desc'} sort-icon`;
+            }
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTableBody tr');
+
+            rows.forEach(row => {
+                const fullname = row.querySelector('.fullname')?.innerText.toLowerCase() || '';
+                const email = row.querySelector('.email')?.innerText.toLowerCase() || '';
+                const phone = row.querySelector('.phone')?.innerText.toLowerCase() || '';
+                const position = row.querySelector('.position')?.innerText.toLowerCase() || '';
+                const id = row.querySelector('.user-id')?.innerText || '';
+
+                const matches = fullname.includes(searchTerm) ||
+                               email.includes(searchTerm) ||
+                               phone.includes(searchTerm) ||
+                               position.includes(searchTerm) ||
+                               id.includes(searchTerm);
+
+                row.style.display = matches ? '' : 'none';
+            });
+        }
+
         function initSorting() {
             const headers = document.querySelectorAll('.sortable');
             headers.forEach(header => {
@@ -607,19 +731,13 @@
             });
         }
 
-        // Закрытие по клику вне модального окна
         document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
+            if (e.target === this) closeEditModal();
         });
 
-        // Поиск
         document.getElementById('searchInput').addEventListener('input', filterTable);
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
-            initUserData();
             initSorting();
         });
     </script>

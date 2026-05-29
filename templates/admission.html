@@ -29,13 +29,37 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         .level-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); }
         .level-icon { background: linear-gradient(135deg, #164ACF 0%, #0d2e8a 100%); padding: 30px; text-align: center; }
         .level-icon i { font-size: 60px; color: #fff; }
-        .level-content { padding: 25px; text-align: center; }
-        .level-content h3 { font-size: 24px; font-weight: 700; color: #164ACF; margin-bottom: 10px; }
-        .level-content p { color: #666; margin-bottom: 20px; font-size: 14px; }
+        .level-content {
+            padding: 25px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .level-content h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #164ACF;
+            margin-bottom: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .level-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            flex: 1;
+        }
         .level-btn {
             display: inline-block;
             padding: 10px 25px;
@@ -45,6 +69,8 @@
             border-radius: 30px;
             font-weight: 600;
             transition: background 0.3s ease;
+            margin-top: auto;
+            align-self: center;
         }
         .level-btn:hover { background: #c40e00; }
         @media (max-width: 1000px) { .levels-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
@@ -58,7 +84,9 @@
                 <div class="site-header-inner">
                     <div class="site-header-logo">
                         <a href="/" class="logo-link">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Logo_istu.svg/1200px-Logo_istu.svg.png" alt="ИжГУ логотип" class="logo-img" onerror="this.src='https://via.placeholder.com/100?text=IGU'">
+                            <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                <i class="fa fa-university" style="font-size: 45px; color: #164ACF;"></i>
+                            </div>
                         </a>
                     </div>
                     <div class="site-header-title">
@@ -114,7 +142,7 @@
                         <div class="level-icon"><i class="fa fa-university"></i></div>
                         <div class="level-content">
                             <h3>Бакалавриат и специалитет</h3>
-                            <p>Обучение 4-5 лет. Диплом государственного образца о высшем образовании.</p>
+                            <p>Обучение 4-5 лет. Диплом государственного образца о высшем образовании. Широкий выбор направлений подготовки.</p>
                             <a href="/admission/bachelor" class="level-btn">Подать документы →</a>
                         </div>
                     </div>
@@ -122,7 +150,7 @@
                         <div class="level-icon"><i class="fa fa-star"></i></div>
                         <div class="level-content">
                             <h3>Магистратура</h3>
-                            <p>Обучение 2 года. Углубленная подготовка по выбранному направлению.</p>
+                            <p>Обучение 2 года. Углубленная подготовка по выбранному направлению. Возможность продолжить научную карьеру.</p>
                             <a href="/admission/master" class="level-btn">Подать документы →</a>
                         </div>
                     </div>
@@ -130,7 +158,7 @@
                         <div class="level-icon"><i class="fa fa-lightbulb-o"></i></div>
                         <div class="level-content">
                             <h3>Аспирантура</h3>
-                            <p>Обучение 3-4 года. Научная деятельность, подготовка диссертации.</p>
+                            <p>Обучение 3-4 года. Научная деятельность, подготовка диссертации. Присвоение ученой степени кандидата наук.</p>
                             <a href="/admission/postgraduate" class="level-btn">Подать документы →</a>
                         </div>
                     </div>

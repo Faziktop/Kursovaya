@@ -1,0 +1,310 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Управление FAQ - Админ-панель ИжГУ{% endblock %}
+
+{% block header %}Управление FAQ{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <h3><i class="fa fa-plus-circle"></i> Добавить новый вопрос</h3>
+    <form method="POST" action="/admin/faq/add" id="addFaqForm">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Вопрос *</label>
+            <input type="text" name="question" id="newQuestion" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Введите вопрос..." required>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Ответ *</label>
+            <textarea name="answer" id="newAnswer" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Введите ответ..." required></textarea>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Порядок сортировки</label>
+                <input type="number" name="order" id="newOrder" value="0" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div>
+                <button type="submit" style="background: #164ACF; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer;">
+                    <i class="fa fa-save"></i> Добавить вопрос
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <h3><i class="fa fa-list"></i> Список вопросов и ответов</h3>
+
+    <div class="search-filter">
+        <input type="text" id="searchInput" class="search-input-filter" placeholder="🔍 Поиск по вопросам и ответам...">
+    </div>
+
+    <div class="admin-table">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="width: 60px; padding: 12px 10px; text-align: left;">ID</th>
+                    <th style="padding: 12px 10px; text-align: left;">Вопрос</th>
+                    <th style="padding: 12px 10px; text-align: left;">Ответ</th>
+                    <th style="width: 100px; padding: 12px 10px; text-align: left;">Порядок</th>
+                    <th style="width: 100px; padding: 12px 10px; text-align: left;">Статус</th>
+                    <th style="width: 130px; padding: 12px 10px; text-align: left;">Действия</th>
+                </tr>
+            </thead>
+            <tbody id="faqTableBody">
+                {% for faq in faq_list %}
+                <tr data-faq-id="{{ faq.id }}">
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;">{{ faq.id }}</td>
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;" class="faq-question-cell">
+                        <span class="question-preview">{{ faq.question[:80] }}{% if faq.question|length > 80 %}...{% endif %}</span>
+                        <span class="question-full" style="display: none;">{{ faq.question }}</span>
+                        <button class="btn-toggle" onclick="toggleFullText(this)" style="background: none; border: none; color: #164ACF; cursor: pointer; font-size: 11px; margin-top: 5px;">Развернуть</button>
+                    </td>
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;" class="faq-answer-cell">
+                        <span class="answer-preview">{{ faq.answer[:100] }}{% if faq.answer|length > 100 %}...{% endif %}</span>
+                        <span class="answer-full" style="display: none;">{{ faq.answer }}</span>
+                        <button class="btn-toggle" onclick="toggleFullText(this)" style="background: none; border: none; color: #164ACF; cursor: pointer; font-size: 11px; margin-top: 5px;">Развернуть</button>
+                    </td>
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;">
+                        <input type="number" class="order-input" value="{{ faq.order }}" data-id="{{ faq.id }}" onchange="updateOrder({{ faq.id }}, this.value)" style="width: 70px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 5px;">
+                    </td>
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;">
+                        <select class="status-select" data-id="{{ faq.id }}" onchange="updateStatus({{ faq.id }}, this.value)" style="padding: 5px 8px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="true" {% if faq.is_active %}selected{% endif %}>Активен</option>
+                            <option value="false" {% if not faq.is_active %}selected{% endif %}>Неактивен</option>
+                        </select>
+                    </td>
+                    <td style="padding: 12px 10px; border-bottom: 1px solid #eee;">
+                        <button class="btn-edit" onclick="openEditModal({{ faq.id }})" style="background: #164ACF; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px;">
+                            <i class="fa fa-edit"></i> Ред.
+                        </button>
+                        <button class="btn-delete" onclick="deleteFaq({{ faq.id }})" style="background: #f44336; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                            <i class="fa fa-trash"></i> Удал.
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: #fff; border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #164ACF;">
+            <h3 style="color: #164ACF;"><i class="fa fa-edit"></i> Редактирование вопроса</h3>
+            <button class="close-modal" onclick="closeEditModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Вопрос</label>
+            <input type="text" id="edit_question" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Ответ</label>
+            <textarea id="edit_answer" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Порядок</label>
+            <input type="number" id="edit_order" style="width: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+            <button class="btn-cancel" onclick="closeEditModal()" style="background: #999; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Отмена</button>
+            <button class="btn-save" onclick="saveFaqChanges()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Сохранить</button>
+        </div>
+        <div id="saveMessage" style="display: none;"></div>
+    </div>
+</div>
+
+<style>
+    .save-success {
+        background: #4CAF50;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        text-align: center;
+        animation: fadeOut 2s ease;
+    }
+    @keyframes fadeOut {
+        0% { opacity: 1; }
+        70% { opacity: 1; }
+        100% { opacity: 0; display: none; }
+    }
+    .flash-message {
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .flash-success {
+        background: #4CAF50;
+        color: #fff;
+    }
+    .flash-error {
+        background: #f44336;
+        color: #fff;
+    }
+</style>
+
+<script>
+    let currentFaqId = null;
+
+    function toggleFullText(btn) {
+        const cell = btn.parentElement;
+        const preview = cell.querySelector('.question-preview, .answer-preview');
+        const full = cell.querySelector('.question-full, .answer-full');
+        if (full && preview) {
+            if (full.style.display === 'none' || full.style.display === '') {
+                full.style.display = 'block';
+                preview.style.display = 'none';
+                btn.textContent = 'Свернуть';
+            } else {
+                full.style.display = 'none';
+                preview.style.display = 'block';
+                btn.textContent = 'Развернуть';
+            }
+        }
+    }
+
+    async function updateOrder(faqId, newOrder) {
+        try {
+            const response = await fetch(`/admin/faq/edit/${faqId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: parseInt(newOrder) })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                alert('Ошибка обновления порядка');
+                location.reload();
+            }
+        } catch(e) {
+            console.error('Ошибка', e);
+        }
+    }
+
+    async function updateStatus(faqId, newStatus) {
+        const isActive = newStatus === 'true';
+        try {
+            const response = await fetch(`/admin/faq/edit/${faqId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: isActive })
+            });
+            const data = await response.json();
+            if (!data.success) {
+                alert('Ошибка обновления статуса');
+                location.reload();
+            }
+        } catch(e) {
+            console.error('Ошибка', e);
+        }
+    }
+
+    async function openEditModal(faqId) {
+        currentFaqId = faqId;
+        try {
+            const response = await fetch(`/admin/faq/get/${faqId}`);
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('edit_question').value = data.faq.question;
+                document.getElementById('edit_answer').value = data.faq.answer;
+                document.getElementById('edit_order').value = data.faq.order;
+            }
+        } catch(e) {
+            console.error('Ошибка загрузки', e);
+            alert('Ошибка загрузки данных');
+        }
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        currentFaqId = null;
+    }
+
+    async function saveFaqChanges() {
+        if (!currentFaqId) return;
+
+        const question = document.getElementById('edit_question').value;
+        const answer = document.getElementById('edit_answer').value;
+        const order = parseInt(document.getElementById('edit_order').value);
+
+        if (!question || !answer) {
+            alert('Заполните все поля');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/faq/edit/${currentFaqId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question, answer: answer, order: order })
+            });
+            const data = await response.json();
+            if (data.success) {
+                const messageDiv = document.getElementById('saveMessage');
+                messageDiv.innerHTML = '<div class="save-success">✔ Изменения сохранены!</div>';
+                messageDiv.style.display = 'block';
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                    closeEditModal();
+                    location.reload();
+                }, 1500);
+            } else {
+                alert('Ошибка: ' + (data.error || 'Не удалось сохранить'));
+            }
+        } catch(e) {
+            console.error('Ошибка сохранения', e);
+            alert('Ошибка сохранения данных');
+        }
+    }
+
+    async function deleteFaq(faqId) {
+        if (!confirm('Вы уверены, что хотите удалить этот вопрос? Это действие нельзя отменить.')) return;
+        try {
+            const response = await fetch(`/admin/faq/delete/${faqId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Вопрос удалён');
+                location.reload();
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        } catch(e) {
+            console.error('Ошибка', e);
+            alert('Ошибка при удалении');
+        }
+    }
+
+    // Фильтрация таблицы
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#faqTableBody tr');
+        rows.forEach(row => {
+            const questionPreview = row.querySelector('.question-preview')?.innerText.toLowerCase() || '';
+            const questionFull = row.querySelector('.question-full')?.innerText.toLowerCase() || '';
+            const answerPreview = row.querySelector('.answer-preview')?.innerText.toLowerCase() || '';
+            const answerFull = row.querySelector('.answer-full')?.innerText.toLowerCase() || '';
+            const matches = questionPreview.includes(searchTerm) || questionFull.includes(searchTerm) ||
+                           answerPreview.includes(searchTerm) || answerFull.includes(searchTerm);
+            row.style.display = matches ? '' : 'none';
+        });
+    });
+
+    // Закрытие модального окна при клике на фон
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+
+    // Проверка флеш-сообщений
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</script>
+{% endblock %}

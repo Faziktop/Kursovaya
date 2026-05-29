@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приёмная комиссия - ИжГУ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Roboto',Arial,sans-serif;background:#f0f2f5}
+        .admin-wrapper{display:flex;min-height:100vh}
+        .admin-sidebar{width:260px;background:#0d2e8a;color:#fff;display:flex;flex-direction:column;position:fixed;height:100vh}
+        .admin-logo{padding:25px;font-size:20px;font-weight:bold;border-bottom:1px solid rgba(255,255,255,0.1);text-align:center}
+        .admin-nav{padding:20px 0}
+        .admin-nav a{display:flex;align-items:center;gap:12px;padding:12px 25px;color:#fff;text-decoration:none;transition:background 0.2s}
+        .admin-nav a:hover,.admin-nav a.active{background:#164ACF}
+        .admin-nav a i{width:20px}
+        .admin-main{flex:1;margin-left:260px;padding:20px}
+        .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #e0e0e0}
+        .admin-header h1{font-size:24px;color:#333}
+        .admin-user{display:flex;align-items:center;gap:10px;color:#666}
+        .logout-btn{color:#666;text-decoration:none}
+        .logout-btn:hover{color:#FD3223}
+        .admin-card{background:#fff;border-radius:16px;padding:25px;margin-bottom:30px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+        .admin-card h3{margin-bottom:20px;color:#164ACF}
+
+        .tabs{display:flex;gap:5px;margin-bottom:25px;border-bottom:2px solid #e0e0e0;flex-wrap:wrap}
+        .tab-btn{padding:12px 25px;background:none;border:none;font-size:15px;font-weight:600;cursor:pointer;color:#666;transition:all 0.3s}
+        .tab-btn:hover{color:#164ACF}
+        .tab-btn.active{color:#FD3223;border-bottom:3px solid #FD3223;margin-bottom:-2px}
+
+        .filters{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+        .filters select{padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+        .filters button{padding:8px 20px;background:#164ACF;color:#fff;border:none;border-radius:8px;cursor:pointer}
+        .filters button:hover{background:#0d2e8a}
+
+        .bulk-actions{display:flex;gap:10px;margin:15px 0;padding:15px;background:#f0f8ff;border-radius:12px;align-items:center;flex-wrap:wrap}
+        .bulk-actions select{padding:8px 12px;border:1px solid #ddd;border-radius:8px}
+        .bulk-actions button{padding:8px 20px;background:#164ACF;color:#fff;border:none;border-radius:8px;cursor:pointer}
+        .bulk-actions button:hover{background:#0d2e8a}
+        .select-all{display:flex;align-items:center;gap:8px;margin-left:10px;cursor:pointer}
+
+        .applications-grid{display:grid;grid-template-columns:1fr;gap:15px;margin-top:20px}
+        .application-card{background:#f8f9fa;border-radius:12px;padding:15px;border-left:4px solid #164ACF;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+        .application-checkbox{margin-right:10px}
+        .application-checkbox input{width:20px;height:20px;cursor:pointer}
+        .application-info{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+        .application-info p{margin:5px 0;font-size:14px}
+        .application-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .application-status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+        .status-pending{background:#ffc107;color:#333}
+        .status-exams{background:#2196F3;color:#fff}
+        .status-competitive{background:#9C27B0;color:#fff}
+        .status-approved{background:#FF9800;color:#fff}
+        .status-consent_pending{background:#4CAF50;color:#fff}
+        .btn-view{background:#164ACF;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block;font-size:12px}
+        .btn-view:hover{background:#0d2e8a}
+        .btn-offer{background:#FF9800;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+        .btn-offer:hover{background:#e68900}
+        .btn-order{background:#4CAF50;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+        .btn-order:hover{background:#45a049}
+        .btn-reject{background:#f44336;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+        .btn-reject:hover{background:#d32f2f}
+        .empty-message{text-align:center;padding:50px;color:#999}
+        .empty-message i{font-size:48px;margin-bottom:15px;display:block}
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar">
+            <div class="admin-logo"><i class="fa fa-gavel"></i> Приёмная комиссия</div>
+            <nav class="admin-nav">
+                <a href="/cabinet"><i class="fa fa-user-circle"></i> Личный кабинет</a>
+                <a href="/"><i class="fa fa-home"></i> На сайт</a>
+            </nav>
+        </aside>
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1><i class="fa fa-check-square-o"></i> Приёмная комиссия</h1>
+                <div class="admin-user">
+                    <i class="fa fa-user-circle"></i>
+                    <span>{{ session.user_name }}</span>
+                    <a href="/logout" class="logout-btn"><i class="fa fa-sign-out"></i></a>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="pending">📋 На рассмотрении</button>
+                    <button class="tab-btn" data-tab="exams">📝 Вступительные испытания</button>
+                    <button class="tab-btn" data-tab="competitive">🏆 Общий конкурс</button>
+                    <button class="tab-btn" data-tab="consent">✓ Согласие на зачисление</button>
+                </div>
+
+                <div class="filters">
+                    <select id="facultyFilter">
+                        <option value="">Все факультеты</option>
+                        {% for f in faculties %}
+                        <option value="{{ f.id }}">{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="specialtyFilter">
+                        <option value="">Все специальности</option>
+                        {% for s in specialties %}
+                        <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button onclick="applyFilters()"><i class="fa fa-filter"></i> Применить</button>
+                    <button onclick="resetFilters()"><i class="fa fa-refresh"></i> Сбросить</button>
+                </div>
+
+                <div class="bulk-actions" id="bulkActions" style="display:none;">
+                    <span id="selectedCount">Выбрано: 0</span>
+                    <select id="bulkActionSelect">
+                        <option value="">Выберите действие</option>
+                        <option value="exams">Отправить на вступительные испытания</option>
+                        <option value="competitive">Отправить на общий конкурс</option>
+                        <option value="rejected">Отказать</option>
+                        <option value="offer">Предложить зачисление</option>
+                    </select>
+                    <button onclick="executeBulkAction()">Применить</button>
+                    <label class="select-all">
+                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()"> Выбрать все
+                    </label>
+                </div>
+
+                <div id="pending-container" class="tab-container active">
+                    <div id="pending-list" class="applications-grid"><div class="empty-message"><i class="fa fa-spinner fa-spin"></i><p>Загрузка...</p></div></div>
+                </div>
+                <div id="exams-container" class="tab-container" style="display:none">
+                    <div id="exams-list" class="applications-grid"><div class="empty-message"><i class="fa fa-spinner fa-spin"></i><p>Загрузка...</p></div></div>
+                </div>
+                <div id="competitive-container" class="tab-container" style="display:none">
+                    <div id="competitive-list" class="applications-grid"><div class="empty-message"><i class="fa fa-spinner fa-spin"></i><p>Загрузка...</p></div></div>
+                </div>
+                <div id="consent-container" class="tab-container" style="display:none">
+                    <div id="consent-list" class="applications-grid"><div class="empty-message"><i class="fa fa-spinner fa-spin"></i><p>Загрузка...</p></div></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="orderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; padding:30px; max-width:500px; width:90%;">
+            <h3 style="color:#164ACF; margin-bottom:20px;"><i class="fa fa-gavel"></i> Издание приказа о зачислении</h3>
+            <form id="orderForm">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600;">Номер приказа</label>
+                    <input type="text" id="orderNumber" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" placeholder="Например: 123-ст" required>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:600;">PDF файл приказа</label>
+                    <input type="file" id="orderPdf" accept=".pdf" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;" required>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="closeOrderModal()" style="padding:10px 20px; background:#999; color:#fff; border:none; border-radius:8px;">Отмена</button>
+                    <button type="submit" style="padding:10px 20px; background:#4CAF50; color:#fff; border:none; border-radius:8px;">Издать приказ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentOrderAppId = null;
+        let currentTab = 'pending';
+        let allApplications = [];
+        let selectedIds = new Set();
+
+        async function loadApplications(tab) {
+            currentTab = tab;
+            try {
+                const response = await fetch(`/rector/api/applications/${tab}`);
+                const data = await response.json();
+                allApplications = data.applications || [];
+                renderApplications(allApplications);
+            } catch(e) {
+                console.error('Ошибка загрузки', e);
+                document.getElementById(`${tab}-list`).innerHTML = '<div class="empty-message"><i class="fa fa-exclamation-triangle"></i><p>Ошибка загрузки</p></div>';
+            }
+        }
+
+        function renderApplications(applications) {
+            const container = document.getElementById(`${currentTab}-list`);
+            const hasCheckboxes = ['pending', 'competitive'].includes(currentTab);
+
+            if (applications && applications.length > 0) {
+                container.innerHTML = applications.map(app => `
+                    <div class="application-card" data-id="${app.id}" style="border-left-color: ${getStatusColor(app.status)}">
+                        ${hasCheckboxes ? `
+                            <div class="application-checkbox">
+                                <input type="checkbox" class="app-checkbox" value="${app.id}" onchange="toggleSelection(${app.id})">
+                            </div>
+                        ` : ''}
+                        <div class="application-info">
+                            <p><strong>№${app.id}</strong> | ${app.applicant_name}</p>
+                            <p><i class="fa fa-envelope"></i> ${app.applicant_email}</p>
+                            <p><i class="fa fa-graduation-cap"></i> ${app.specialty_name} (${app.specialty_code})</p>
+                            <p><i class="fa fa-university"></i> ${app.faculty_name}</p>
+                            <p><i class="fa fa-calendar"></i> ${app.created_at}</p>
+                            <p><span class="application-status status-${app.status}">${app.status_text}</span></p>
+                        </div>
+                        <div class="application-actions">
+                            <a href="/rector/applications/view/${app.id}" class="btn-view" target="_blank"><i class="fa fa-eye"></i> Документы</a>
+                            ${getActionButtons(app)}
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('selectedCount').innerHTML = `Выбрано: ${selectedIds.size}`;
+                document.getElementById('bulkActions').style.display = hasCheckboxes && applications.length > 0 ? 'flex' : 'none';
+            } else {
+                container.innerHTML = '<div class="empty-message"><i class="fa fa-folder-open"></i><p>Нет заявлений</p></div>';
+                document.getElementById('bulkActions').style.display = 'none';
+            }
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': '#ffc107',
+                'exams': '#2196F3',
+                'competitive': '#9C27B0',
+                'approved': '#FF9800',
+                'consent_pending': '#4CAF50'
+            };
+            return colors[status] || '#164ACF';
+        }
+
+        function getActionButtons(app) {
+            if (currentTab === 'pending') {
+                return `
+                    <button class="btn-view" onclick="updateSingleStatus(${app.id}, 'exams')"><i class="fa fa-pencil"></i> На вступительные</button>
+                    <button class="btn-view" onclick="updateSingleStatus(${app.id}, 'competitive')"><i class="fa fa-trophy"></i> На конкурс</button>
+                    <button class="btn-reject" onclick="updateSingleStatus(${app.id}, 'rejected')"><i class="fa fa-times"></i> Отказать</button>
+                `;
+            } else if (currentTab === 'competitive') {
+                return `
+                    <button class="btn-offer" onclick="offerSingleEnrollment(${app.id})"><i class="fa fa-graduation-cap"></i> Предложить зачисление</button>
+                `;
+            } else if (currentTab === 'consent') {
+                return `
+                    <button class="btn-order" onclick="openOrderModal(${app.id})"><i class="fa fa-print"></i> Издать приказ</button>
+                `;
+            }
+            return '';
+        }
+
+        function toggleSelection(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            document.getElementById('selectedCount').innerHTML = `Выбрано: ${selectedIds.size}`;
+            updateSelectAllCheckbox();
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.app-checkbox');
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (selectAll.checked) {
+                checkboxes.forEach(cb => {
+                    cb.checked = true;
+                    selectedIds.add(parseInt(cb.value));
+                });
+            } else {
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                    selectedIds.delete(parseInt(cb.value));
+                });
+            }
+            document.getElementById('selectedCount').innerHTML = `Выбрано: ${selectedIds.size}`;
+        }
+
+        function updateSelectAllCheckbox() {
+            const checkboxes = document.querySelectorAll('.app-checkbox');
+            const selectAll = document.getElementById('selectAllCheckbox');
+            if (checkboxes.length > 0 && selectedIds.size === checkboxes.length) {
+                selectAll.checked = true;
+            } else {
+                selectAll.checked = false;
+            }
+        }
+
+        async function executeBulkAction() {
+            const action = document.getElementById('bulkActionSelect').value;
+            if (!action) {
+                alert('Выберите действие');
+                return;
+            }
+            if (selectedIds.size === 0) {
+                alert('Выберите заявления');
+                return;
+            }
+
+            const actionText = {
+                'exams': 'отправить на вступительные испытания',
+                'competitive': 'отправить на общий конкурс',
+                'rejected': 'отказать',
+                'offer': 'предложить зачисление'
+            };
+
+            if (!confirm(`Вы уверены, что хотите ${actionText[action]} выбранные заявления (${selectedIds.size} шт.)?`)) return;
+
+            try {
+                let response;
+                if (action === 'offer') {
+                    response = await fetch('/rector/offer-enrollment-bulk', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ids: Array.from(selectedIds)})
+                    });
+                } else {
+                    response = await fetch('/rector/applications/bulk-update', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ids: Array.from(selectedIds), status: action})
+                    });
+                }
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    selectedIds.clear();
+                    loadApplications(currentTab);
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch(e) {
+                console.error('Ошибка', e);
+                alert('Ошибка при выполнении действия');
+            }
+        }
+
+        async function updateSingleStatus(appId, newStatus) {
+            const statusText = {
+                'exams': 'отправить на вступительные испытания',
+                'competitive': 'отправить на общий конкурс',
+                'rejected': 'отказать'
+            };
+            if (!confirm(`Вы уверены, что хотите ${statusText[newStatus]} абитуриента?`)) return;
+
+            try {
+                const response = await fetch(`/rector/applications/update/${appId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({status: newStatus})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Статус обновлён!`);
+                    loadApplications(currentTab);
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Не удалось обновить статус'));
+                }
+            } catch(e) {
+                console.error('Ошибка', e);
+                alert('Ошибка при обновлении статуса');
+            }
+        }
+
+        async function offerSingleEnrollment(appId) {
+            if (!confirm(`Предложить зачисление абитуриенту?`)) return;
+            try {
+                const response = await fetch(`/rector/offer-enrollment/${appId}`, {method: 'POST'});
+                const data = await response.json();
+                if (data.success) {
+                    alert('Предложение отправлено!');
+                    loadApplications(currentTab);
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch(e) {
+                console.error('Ошибка', e);
+                alert('Ошибка при отправке предложения');
+            }
+        }
+
+        function openOrderModal(appId) {
+            currentOrderAppId = appId;
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeOrderModal() {
+            currentOrderAppId = null;
+            document.getElementById('orderModal').style.display = 'none';
+            document.getElementById('orderForm').reset();
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('order_number', document.getElementById('orderNumber').value);
+            const pdfFile = document.getElementById('orderPdf').files[0];
+            if (!pdfFile) {
+                alert('Выберите PDF файл');
+                return;
+            }
+            formData.append('order_pdf', pdfFile);
+
+            try {
+                const response = await fetch(`/rector/issue-order/${currentOrderAppId}`, {method: 'POST', body: formData});
+                const data = await response.json();
+                if (data.success) {
+                    alert('Приказ издан! Студент зачислен.');
+                    closeOrderModal();
+                    loadApplications(currentTab);
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch(e) {
+                console.error('Ошибка', e);
+                alert('Ошибка при издании приказа');
+            }
+        });
+
+        function applyFilters() {
+            const facultyId = document.getElementById('facultyFilter').value;
+            const specialtyId = document.getElementById('specialtyFilter').value;
+
+            let filtered = [...allApplications];
+            if (facultyId) {
+                const facultyName = document.getElementById('facultyFilter').options[document.getElementById('facultyFilter').selectedIndex]?.text;
+                filtered = filtered.filter(app => app.faculty_name === facultyName);
+            }
+            if (specialtyId) {
+                filtered = filtered.filter(app => app.specialty_id == specialtyId);
+            }
+            renderApplications(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('facultyFilter').value = '';
+            document.getElementById('specialtyFilter').value = '';
+            renderApplications(allApplications);
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-container').forEach(c => c.style.display = 'none');
+                btn.classList.add('active');
+                const tab = btn.dataset.tab;
+                document.getElementById(`${tab}-container`).style.display = 'block';
+                selectedIds.clear();
+                loadApplications(tab);
+            });
+        });
+
+        loadApplications('pending');
+    </script>
+</body>
+</html>
